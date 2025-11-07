@@ -21,6 +21,9 @@ await connectDatabase();
 
 const app = express();
 
+// Log configured client origins at startup for debugging CORS issues in production
+console.log(`[config] Allowed client origins: ${env.clientOrigins.join(", ")}`);
+
 app.use(helmet());
 app.use(cors({ origin: env.clientOrigins, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
