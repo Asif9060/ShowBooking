@@ -34,7 +34,9 @@ const paymentSchema = Joi.object({
    .custom((value, helpers) => {
       if (value.method === "card") {
          if (!value.cardHolder?.trim()) {
-            return helpers.error("any.custom", { message: "Card holder name is required." });
+            return helpers.error("any.custom", {
+               message: "Card holder name is required.",
+            });
          }
          if (!value.cardNumber?.trim()) {
             return helpers.error("any.custom", { message: "Card number is required." });
@@ -49,7 +51,9 @@ const paymentSchema = Joi.object({
 
       if (value.method === "bkash") {
          if (!value.bkashTransactionId?.trim()) {
-            return helpers.error("any.custom", { message: "bKash transaction ID is required." });
+            return helpers.error("any.custom", {
+               message: "bKash transaction ID is required.",
+            });
          }
       }
 
@@ -80,10 +84,13 @@ export const createBooking = asyncHandler(async (req, res, next) => {
    // Payment is optional during booking creation
    let paymentValue = null;
    if (payment && typeof payment === "object") {
-      const { error: paymentError, value: validatedPayment } = paymentSchema.validate(payment);
+      const { error: paymentError, value: validatedPayment } =
+         paymentSchema.validate(payment);
       if (paymentError) {
          return next(
-            createError(422, "Payment details invalid.", { details: paymentError.details })
+            createError(422, "Payment details invalid.", {
+               details: paymentError.details,
+            })
          );
       }
       paymentValue = validatedPayment;

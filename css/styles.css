@@ -1336,7 +1336,8 @@ button:focus {
    background: linear-gradient(135deg, rgba(124, 92, 255, 0.2), rgba(46, 230, 167, 0.15));
    border-color: rgba(124, 92, 255, 0.5);
    color: #fff;
-   box-shadow: 0 12px 24px rgba(124, 92, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+   box-shadow: 0 12px 24px rgba(124, 92, 255, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .payment-method-option input[type="radio"]:checked + span::before {

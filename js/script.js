@@ -162,8 +162,8 @@
       seatMultipliers: { ...FALLBACK_SEAT_MULTIPLIERS },
       user: null,
       userId: null,
-   sessionToken: null,
-   sessionExpiresAt: null,
+      sessionToken: null,
+      sessionExpiresAt: null,
       isAdmin: false,
       userBookings: [],
       hero: {
@@ -504,7 +504,11 @@
       }
 
       if (isSessionExpired(state.sessionExpiresAt)) {
-         resetAuthState({ reason: "expired", message: "Your session expired. Please sign in again.", isError: true });
+         resetAuthState({
+            reason: "expired",
+            message: "Your session expired. Please sign in again.",
+            isError: true,
+         });
          return;
       }
 
@@ -594,7 +598,11 @@
       if (dom.adminLoginMessage && message) {
          setFormMessage(dom.adminLoginMessage, message, isError);
       } else if (dom.adminLoginMessage && reason === "expired") {
-         setFormMessage(dom.adminLoginMessage, "Session expired. Please sign in again.", true);
+         setFormMessage(
+            dom.adminLoginMessage,
+            "Session expired. Please sign in again.",
+            true
+         );
       } else if (dom.adminLoginMessage && reason === "invalid") {
          setFormMessage(dom.adminLoginMessage, "Please sign in to continue.", true);
       } else if (dom.adminLoginMessage && !isError) {
@@ -610,7 +618,9 @@
 
    function handleAuthToggle() {
       if (state.user) {
-         signOut({ silent: true }).catch((error) => console.warn("Sign-out failed", error));
+         signOut({ silent: true }).catch((error) =>
+            console.warn("Sign-out failed", error)
+         );
       } else {
          setAuthMode("signin");
          switchView("admin");
@@ -1313,7 +1323,7 @@
             switchView("admin");
             return;
          }
-         
+
          if (!currentShowtime) {
             alert("Select a showtime first.");
             return;
@@ -1682,14 +1692,14 @@
          : booking.seat
          ? [booking.seat]
          : [];
-      
+
       // Extract seat codes - handle both object format {seat: "A1"} and string format "A1"
-      const seatCodes = seats.map(s => {
+      const seatCodes = seats.map((s) => {
          if (typeof s === "string") return s;
          if (s && typeof s === "object" && s.seat) return s.seat;
          return String(s);
       });
-      
+
       const price =
          typeof booking.totalPrice === "number" ? booking.totalPrice : booking.price;
       const showtime = booking.showtime || "";
@@ -1723,25 +1733,25 @@
          cancelBtn.addEventListener("click", () => cancelBooking(booking));
       }
 
-            // Add Pay Now button
-            try {
-               const actionsContainer = root.querySelector(".ticket-actions") || root;
-               const payBtn = document.createElement("button");
-               payBtn.type = "button";
-               payBtn.className = "btn btn-secondary pay-now";
-               const paymentStatus = booking?.payment?.status || "pending";
-               if (paymentStatus === "captured") {
-                  payBtn.textContent = "Paid";
-                  payBtn.disabled = true;
-                  payBtn.classList.add("paid");
-               } else {
-                  payBtn.textContent = "Pay Now";
-               }
-               payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
-               actionsContainer.appendChild(payBtn);
-            } catch (err) {
-               // ignore UI attach errors
-            }
+      // Add Pay Now button
+      try {
+         const actionsContainer = root.querySelector(".ticket-actions") || root;
+         const payBtn = document.createElement("button");
+         payBtn.type = "button";
+         payBtn.className = "btn btn-secondary pay-now";
+         const paymentStatus = booking?.payment?.status || "pending";
+         if (paymentStatus === "captured") {
+            payBtn.textContent = "Paid";
+            payBtn.disabled = true;
+            payBtn.classList.add("paid");
+         } else {
+            payBtn.textContent = "Pay Now";
+         }
+         payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
+         actionsContainer.appendChild(payBtn);
+      } catch (err) {
+         // ignore UI attach errors
+      }
 
       if (qrContainer) {
          renderQRCode(qrContainer, booking);
@@ -1769,18 +1779,21 @@
    }
 
    function openBookingPaymentModal(booking) {
-            if (!booking) return;
-            const container = document.createElement("div");
-            container.className = "booking-payment-modal";
-            const seats = Array.isArray(booking.seats)
-               ? booking.seats.map((s) => (typeof s === "string" ? s : s.seat)).join(", ")
-               : (booking.seats || []).join(", ");
-            const total = typeof booking.totalPrice === "number" ? booking.totalPrice : booking.price || 0;
+      if (!booking) return;
+      const container = document.createElement("div");
+      container.className = "booking-payment-modal";
+      const seats = Array.isArray(booking.seats)
+         ? booking.seats.map((s) => (typeof s === "string" ? s : s.seat)).join(", ")
+         : (booking.seats || []).join(", ");
+      const total =
+         typeof booking.totalPrice === "number" ? booking.totalPrice : booking.price || 0;
 
-            container.innerHTML = `
+      container.innerHTML = `
                <header class="modal-header">
                   <h2>Pay for booking</h2>
-                  <p class="muted">${booking.movieTitle || booking.title || "Untitled"} — ${booking.showtime || ""}</p>
+                  <p class="muted">${
+                     booking.movieTitle || booking.title || "Untitled"
+                  } — ${booking.showtime || ""}</p>
                </header>
                <div class="modal-body">
                   <p>Seats: ${seats || "—"}</p>
@@ -1850,149 +1863,163 @@
                </footer>
             `;
 
-            const paymentSection = container.querySelector(".seat-payment");
-            const paymentMessage = paymentSection?.querySelector(".payment-message");
-            const paymentMethodInputs = paymentSection ? Array.from(paymentSection.querySelectorAll('input[name="paymentMethod"]')) : [];
-            const paymentForms = paymentSection ? Array.from(paymentSection.querySelectorAll(".payment-form")) : [];
+      const paymentSection = container.querySelector(".seat-payment");
+      const paymentMessage = paymentSection?.querySelector(".payment-message");
+      const paymentMethodInputs = paymentSection
+         ? Array.from(paymentSection.querySelectorAll('input[name="paymentMethod"]'))
+         : [];
+      const paymentForms = paymentSection
+         ? Array.from(paymentSection.querySelectorAll(".payment-form"))
+         : [];
 
-            const cardForm = paymentSection?.querySelector('[data-payment-form="card"]');
-            const cardHolderInput = cardForm?.querySelector('input[name="cardHolder"]');
-            const cardNumberInput = cardForm?.querySelector('input[name="cardNumber"]');
-            const cardExpiryInput = cardForm?.querySelector('input[name="cardExpiry"]');
-            const cardCvvInput = cardForm?.querySelector('input[name="cardCvv"]');
+      const cardForm = paymentSection?.querySelector('[data-payment-form="card"]');
+      const cardHolderInput = cardForm?.querySelector('input[name="cardHolder"]');
+      const cardNumberInput = cardForm?.querySelector('input[name="cardNumber"]');
+      const cardExpiryInput = cardForm?.querySelector('input[name="cardExpiry"]');
+      const cardCvvInput = cardForm?.querySelector('input[name="cardCvv"]');
 
-            const bkashForm = paymentSection?.querySelector('[data-payment-form="bkash"]');
-            const bkashNumberInput = bkashForm?.querySelector('input[name="bkashNumber"]');
-            const bkashTransactionInput = bkashForm?.querySelector('input[name="bkashTransaction"]');
+      const bkashForm = paymentSection?.querySelector('[data-payment-form="bkash"]');
+      const bkashNumberInput = bkashForm?.querySelector('input[name="bkashNumber"]');
+      const bkashTransactionInput = bkashForm?.querySelector(
+         'input[name="bkashTransaction"]'
+      );
 
-            const cancelBtn = container.querySelector(".modal-cancel");
-            const payBtn = container.querySelector(".modal-pay");
+      const cancelBtn = container.querySelector(".modal-cancel");
+      const payBtn = container.querySelector(".modal-pay");
 
-            function setPaymentMessage(message, isError = true) {
-               if (!paymentMessage) return;
-               paymentMessage.textContent = message || "";
-               paymentMessage.classList.toggle("error", Boolean(message && isError));
-               paymentMessage.classList.toggle("success", Boolean(message && !isError));
-            }
+      function setPaymentMessage(message, isError = true) {
+         if (!paymentMessage) return;
+         paymentMessage.textContent = message || "";
+         paymentMessage.classList.toggle("error", Boolean(message && isError));
+         paymentMessage.classList.toggle("success", Boolean(message && !isError));
+      }
 
-            function setPaymentMethod(method = "card") {
-               paymentForms.forEach((form) => {
-                  const formMethod = form.dataset.paymentForm;
-                  form.classList.toggle("hidden", formMethod !== method);
-               });
-               paymentMethodInputs.forEach((input) => {
-                  input.checked = input.value === method;
-               });
-               setPaymentMessage("");
-            }
+      function setPaymentMethod(method = "card") {
+         paymentForms.forEach((form) => {
+            const formMethod = form.dataset.paymentForm;
+            form.classList.toggle("hidden", formMethod !== method);
+         });
+         paymentMethodInputs.forEach((input) => {
+            input.checked = input.value === method;
+         });
+         setPaymentMessage("");
+      }
 
-            paymentMethodInputs.forEach((input) => {
-               input.addEventListener("change", () => {
-                  if (input.checked) setPaymentMethod(input.value);
-               });
-            });
+      paymentMethodInputs.forEach((input) => {
+         input.addEventListener("change", () => {
+            if (input.checked) setPaymentMethod(input.value);
+         });
+      });
 
-            cardNumberInput?.addEventListener("input", () => {
-               const digitsOnly = (cardNumberInput.value || "").replace(/\D+/g, "");
-               const grouped = digitsOnly.replace(/(.{4})/g, "$1 ").trim();
-               cardNumberInput.value = grouped;
-            });
+      cardNumberInput?.addEventListener("input", () => {
+         const digitsOnly = (cardNumberInput.value || "").replace(/\D+/g, "");
+         const grouped = digitsOnly.replace(/(.{4})/g, "$1 ").trim();
+         cardNumberInput.value = grouped;
+      });
 
-            cardExpiryInput?.addEventListener("input", () => {
-               let value = cardExpiryInput.value.replace(/[^0-9]/g, "");
-               if (value.length > 4) value = value.slice(0, 4);
-               if (value.length >= 3) {
-                  value = `${value.slice(0, 2)}/${value.slice(2)}`;
-               }
-               cardExpiryInput.value = value;
-            });
-
-            cancelBtn?.addEventListener("click", closeModal);
-
-            payBtn?.addEventListener("click", async () => {
-               setPaymentMessage("");
-               let payload;
-               try {
-                  const method = paymentMethodInputs.find((i) => i.checked)?.value || "card";
-                  if (method === "card") {
-                     const holder = cardHolderInput?.value?.trim() || "";
-                     const numberRaw = cardNumberInput?.value?.replace(/\s+/g, "") || "";
-                     const expiry = cardExpiryInput?.value?.trim() || "";
-                     const cvv = cardCvvInput?.value?.trim() || "";
-
-                     if (!holder) throw new Error("Enter the cardholder name.");
-                     if (!/^\d{8,19}$/.test(numberRaw)) throw new Error("Enter a valid card number.");
-                     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) throw new Error("Enter card expiry in MM/YY format.");
-                     if (!/^\d{3,4}$/.test(cvv)) throw new Error("Enter a valid CVV.");
-
-                     payload = {
-                        method: "card",
-                        cardHolder: holder,
-                        cardNumber: numberRaw,
-                        cardExpiry: expiry,
-                        cardCvv: cvv,
-                     };
-                  } else {
-                     const bkashNumber = bkashNumberInput?.value?.trim() || "";
-                     const transactionId = bkashTransactionInput?.value?.trim() || "";
-                     if (!transactionId) throw new Error("Enter the bKash transaction ID.");
-                     payload = {
-                        method: "bkash",
-                        bkashNumber,
-                        bkashTransactionId: transactionId,
-                     };
-                  }
-               } catch (err) {
-                  setPaymentMessage(err.message || String(err), true);
-                  return;
-               }
-
-               payBtn.disabled = true;
-               payBtn.textContent = "Processing...";
-               try {
-                  const bookingId = booking.id || booking._id;
-                  await safeFetch(`/bookings/${encodeURIComponent(bookingId)}/payment`, {
-                     method: "POST",
-                     body: JSON.stringify(payload),
-                  });
-                  setPaymentMessage("Payment recorded successfully!", false);
-                  await loadUserBookings();
-                  renderBookings();
-                  setTimeout(() => closeModal(), 800);
-               } catch (error) {
-                  console.warn("Payment update failed", error);
-                  setPaymentMessage("Unable to record payment. It will be saved locally.", true);
-
-                  // Fallback: update local booking copy
-                  try {
-                     const existing = loadLocalBookings();
-                     const idx = existing.findIndex((b) => (b.id || b._id) === (booking.id || booking._id));
-                     const localCopy = existing[idx] || booking;
-                     
-                     // Set payment status as captured for both card and bKash
-                     const paymentInfo = {
-                        ...payload,
-                        status: "captured"
-                     };
-                     localCopy.payment = paymentInfo;
-                     
-                     if (idx >= 0) existing[idx] = localCopy; else existing.push(localCopy);
-                     localStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(existing));
-                     state.userBookings = loadLocalBookings();
-                     renderBookings();
-                     setTimeout(() => closeModal(), 800);
-                  } catch (err2) {
-                     console.warn("Local save failed", err2);
-                  }
-               } finally {
-                  payBtn.disabled = false;
-                  payBtn.textContent = "Pay Now";
-               }
-            });
-
-            openModal(container);
-            setPaymentMethod("card");
+      cardExpiryInput?.addEventListener("input", () => {
+         let value = cardExpiryInput.value.replace(/[^0-9]/g, "");
+         if (value.length > 4) value = value.slice(0, 4);
+         if (value.length >= 3) {
+            value = `${value.slice(0, 2)}/${value.slice(2)}`;
          }
+         cardExpiryInput.value = value;
+      });
+
+      cancelBtn?.addEventListener("click", closeModal);
+
+      payBtn?.addEventListener("click", async () => {
+         setPaymentMessage("");
+         let payload;
+         try {
+            const method = paymentMethodInputs.find((i) => i.checked)?.value || "card";
+            if (method === "card") {
+               const holder = cardHolderInput?.value?.trim() || "";
+               const numberRaw = cardNumberInput?.value?.replace(/\s+/g, "") || "";
+               const expiry = cardExpiryInput?.value?.trim() || "";
+               const cvv = cardCvvInput?.value?.trim() || "";
+
+               if (!holder) throw new Error("Enter the cardholder name.");
+               if (!/^\d{8,19}$/.test(numberRaw))
+                  throw new Error("Enter a valid card number.");
+               if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry))
+                  throw new Error("Enter card expiry in MM/YY format.");
+               if (!/^\d{3,4}$/.test(cvv)) throw new Error("Enter a valid CVV.");
+
+               payload = {
+                  method: "card",
+                  cardHolder: holder,
+                  cardNumber: numberRaw,
+                  cardExpiry: expiry,
+                  cardCvv: cvv,
+               };
+            } else {
+               const bkashNumber = bkashNumberInput?.value?.trim() || "";
+               const transactionId = bkashTransactionInput?.value?.trim() || "";
+               if (!transactionId) throw new Error("Enter the bKash transaction ID.");
+               payload = {
+                  method: "bkash",
+                  bkashNumber,
+                  bkashTransactionId: transactionId,
+               };
+            }
+         } catch (err) {
+            setPaymentMessage(err.message || String(err), true);
+            return;
+         }
+
+         payBtn.disabled = true;
+         payBtn.textContent = "Processing...";
+         try {
+            const bookingId = booking.id || booking._id;
+            await safeFetch(`/bookings/${encodeURIComponent(bookingId)}/payment`, {
+               method: "POST",
+               body: JSON.stringify(payload),
+            });
+            setPaymentMessage("Payment recorded successfully!", false);
+            await loadUserBookings();
+            renderBookings();
+            setTimeout(() => closeModal(), 800);
+         } catch (error) {
+            console.warn("Payment update failed", error);
+            setPaymentMessage(
+               "Unable to record payment. It will be saved locally.",
+               true
+            );
+
+            // Fallback: update local booking copy
+            try {
+               const existing = loadLocalBookings();
+               const idx = existing.findIndex(
+                  (b) => (b.id || b._id) === (booking.id || booking._id)
+               );
+               const localCopy = existing[idx] || booking;
+
+               // Set payment status as captured for both card and bKash
+               const paymentInfo = {
+                  ...payload,
+                  status: "captured",
+               };
+               localCopy.payment = paymentInfo;
+
+               if (idx >= 0) existing[idx] = localCopy;
+               else existing.push(localCopy);
+               localStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(existing));
+               state.userBookings = loadLocalBookings();
+               renderBookings();
+               setTimeout(() => closeModal(), 800);
+            } catch (err2) {
+               console.warn("Local save failed", err2);
+            }
+         } finally {
+            payBtn.disabled = false;
+            payBtn.textContent = "Pay Now";
+         }
+      });
+
+      openModal(container);
+      setPaymentMethod("card");
+   }
 
    async function generateTicketPDF(booking) {
       try {
@@ -2005,13 +2032,15 @@
          doc.text(booking.movieTitle || "Untitled", 10, 24);
          doc.setFontSize(10);
          doc.text(`Showtime: ${booking.showtime || "—"}`, 10, 34);
-         
+
          // Extract seat codes properly
-         const seats = Array.isArray(booking.seats) 
-            ? booking.seats.map(s => typeof s === "string" ? s : s?.seat || String(s)).join(", ")
+         const seats = Array.isArray(booking.seats)
+            ? booking.seats
+                 .map((s) => (typeof s === "string" ? s : s?.seat || String(s)))
+                 .join(", ")
             : "—";
          doc.text(`Seats: ${seats}`, 10, 42);
-         
+
          const price =
             typeof booking.totalPrice === "number"
                ? booking.totalPrice
