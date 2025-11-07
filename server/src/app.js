@@ -25,7 +25,22 @@ const app = express();
 console.log(`[config] Allowed client origins: ${env.clientOrigins.join(", ")}`);
 
 app.use(helmet());
-app.use(cors({ origin: env.clientOrigins, credentials: true }));
+app.use(
+   cors({
+      origin: (origin, callback) => {
+         // Allow requests with no origin (like mobile apps or curl requests)
+         if (!origin) return callback(null, true);
+         
+         if (env.clientOrigins.includes(origin)) {
+            callback(null, true);
+         } else {
+            console.log(`[CORS] Rejected origin: ${origin}`);
+            callback(new Error("Not allowed by CORS"));
+         }
+      },
+      credentials: true,
+   })
+);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
