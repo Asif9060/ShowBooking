@@ -14,7 +14,11 @@ const parseOrigins = (value = "") =>
       .map((origin) => origin.trim())
       .filter(Boolean);
 
-const defaultOrigins = ["http://localhost:5500", "http://127.0.0.1:5500"];
+const defaultOrigins = [
+   "http://localhost:5500",
+   "http://127.0.0.1:5500",
+   "https://show-booking-coral.vercel.app",
+];
 const configuredOrigins = parseOrigins(process.env.CLIENT_ORIGIN);
 const clientOrigins = configuredOrigins.length ? configuredOrigins : defaultOrigins;
 
