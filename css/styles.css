@@ -1486,7 +1486,7 @@ button:focus {
    text-shadow: 0 2px 8px rgba(229, 62, 141, 0.4);
    margin: 12px 0;
    letter-spacing: 2px;
-   font-family: 'Courier New', monospace;
+   font-family: "Courier New", monospace;
    user-select: all;
    cursor: pointer;
 }
@@ -1710,15 +1710,17 @@ button:focus {
 }
 
 .toast {
-   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+   background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05)
+   );
    backdrop-filter: blur(20px);
    -webkit-backdrop-filter: blur(20px);
    border: 2px solid rgba(255, 255, 255, 0.2);
    border-radius: 20px;
    padding: 24px 28px;
-   box-shadow: 
-      0 20px 60px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset,
       0 10px 20px rgba(0, 0, 0, 0.3);
    display: flex;
    align-items: center;
@@ -1732,12 +1734,16 @@ button:focus {
 
 /* Gradient border effect */
 .toast::before {
-   content: '';
+   content: "";
    position: absolute;
    inset: 0;
    border-radius: 20px;
    padding: 2px;
-   background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+   background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.1)
+   );
    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
    -webkit-mask-composite: xor;
    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -1756,12 +1762,20 @@ button:focus {
 }
 
 .toast.toast-error {
-   background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(255, 107, 107, 0.1));
+   background: linear-gradient(
+      135deg,
+      rgba(255, 107, 107, 0.25),
+      rgba(255, 107, 107, 0.1)
+   );
    border-color: rgba(255, 107, 107, 0.5);
 }
 
 .toast.toast-error::before {
-   background: linear-gradient(135deg, rgba(255, 107, 107, 0.6), rgba(255, 107, 107, 0.2));
+   background: linear-gradient(
+      135deg,
+      rgba(255, 107, 107, 0.6),
+      rgba(255, 107, 107, 0.2)
+   );
 }
 
 .toast.toast-info {
@@ -1798,7 +1812,7 @@ button:focus {
 }
 
 .toast-icon::after {
-   content: '';
+   content: "";
    position: absolute;
    inset: -2px;
    border-radius: 50%;
@@ -1960,25 +1974,25 @@ button:focus {
       padding: 20px 22px;
       border-radius: 18px;
    }
-   
+
    .toast::before {
       border-radius: 18px;
    }
-   
+
    .toast-icon {
       width: 48px;
       height: 48px;
       font-size: 2rem;
    }
-   
+
    .toast-title {
       font-size: 1.05rem;
    }
-   
+
    .toast-message {
       font-size: 0.95rem;
    }
-   
+
    .toast-close {
       width: 32px;
       height: 32px;
@@ -1991,7 +2005,7 @@ button:focus {
       padding: 18px 20px;
       gap: 16px;
    }
-   
+
    .toast-icon {
       width: 44px;
       height: 44px;

@@ -5,7 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Movie and Show Booking — Book Movies</title>
       <link rel="stylesheet" href="css/styles.css" />
-      <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
    </head>
    <body>
       <div class="background-wrapper" aria-hidden="true">
@@ -756,7 +756,6 @@
                </div>
                <div class="footer-meta">
                   <span>&copy; <span id="year"></span> Movie & Show Booking</span>
-
                </div>
             </div>
          </div>
@@ -764,9 +763,12 @@
 
       <!-- Toast Notification System -->
       <div id="toastBackdrop" class="toast-backdrop"></div>
-      <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+      <div
+         id="toastContainer"
+         class="toast-container"
+         aria-live="polite"
+         aria-atomic="true"></div>
 
-      <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
       <script>
          // Detect if running in Electron
          const isElectron = window.electron && window.electron.isElectron;

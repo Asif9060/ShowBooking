@@ -706,22 +706,23 @@
          if (state.isAdmin) {
             await loadAdminResources();
          }
-         
+
          // Show success toast
          showToast(
-            authMode === "signup" 
-               ? "Account created successfully! Welcome aboard." 
+            authMode === "signup"
+               ? "Account created successfully! Welcome aboard."
                : "Signed in successfully! Welcome back.",
-            'success'
+            "success"
          );
       } catch (error) {
          console.error(error);
-         const errorMsg = error.message ||
+         const errorMsg =
+            error.message ||
             (authMode === "signup" ? "Unable to sign up." : "Unable to sign in.");
          setFormMessage(dom.adminLoginMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       } finally {
          dom.adminAuthSubmit?.removeAttribute("disabled");
          dom.adminToggleMode?.removeAttribute("disabled");
@@ -1371,19 +1372,21 @@
             );
             await loadUserBookings();
             closeModal();
-            
+
             // Show success toast
             showToast(
-               `Successfully booked ${seatList.length} seat${seatList.length > 1 ? 's' : ''} for ${movie.title}!`,
-               'success'
+               `Successfully booked ${seatList.length} seat${
+                  seatList.length > 1 ? "s" : ""
+               } for ${movie.title}!`,
+               "success"
             );
          } catch (error) {
             console.warn("Booking failed:", error);
             const errorMsg = "Unable to complete booking. Please try again.";
             alert(errorMsg);
-            
+
             // Show error toast
-            showToast(errorMsg, 'error');
+            showToast(errorMsg, "error");
          } finally {
             confirmBtn.disabled = false;
             confirmBtn.textContent = "Confirm Booking";
@@ -1791,23 +1794,46 @@
    }
 
    function renderQRCode(container, booking) {
-      if (!container || typeof QRCode === "undefined") return;
-      container.innerHTML = "";
-      try {
-         const qrData = JSON.stringify({
-            bookingId: booking.id || booking._id,
-            movieId: booking.movieId,
-            showtime: booking.showtime,
-            seats: booking.seats,
-         });
-         new QRCode(container, {
-            text: qrData,
-            width: 96,
-            height: 96,
-         });
-      } catch (error) {
-         console.warn("Unable to render QR code", error);
-      }
+      return new Promise((resolve, reject) => {
+         if (!container) {
+            reject(new Error('No container provided'));
+            return;
+         }
+         
+         if (typeof QRCode === "undefined") {
+            console.warn('QRCode library not loaded');
+            reject(new Error('QRCode library not loaded'));
+            return;
+         }
+         
+         container.innerHTML = "";
+         
+         try {
+            const qrData = JSON.stringify({
+               bookingId: booking.id || booking._id,
+               movieId: booking.movieId,
+               movieTitle: booking.movieTitle,
+               showtime: booking.showtime,
+               seats: booking.seats,
+               totalPrice: booking.totalPrice || booking.price
+            });
+            
+            const qr = new QRCode(container, {
+               text: qrData,
+               width: 128,
+               height: 128,
+               colorDark: "#000000",
+               colorLight: "#ffffff",
+               correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // QR code generation is synchronous, resolve immediately
+            setTimeout(() => resolve(qr), 100);
+         } catch (error) {
+            console.warn("Unable to render QR code", error);
+            reject(error);
+         }
+      });
    }
 
    function openBookingPaymentModal(booking) {
@@ -1885,7 +1911,9 @@
                               </label>
                               <div class="payment-help">
                                  <strong>Steps:</strong><br>
-                                 1. Send <strong>${formatCurrency(total)}</strong> to <strong>01970174297</strong> via bKash<br>
+                                 1. Send <strong>${formatCurrency(
+                                    total
+                                 )}</strong> to <strong>01970174297</strong> via bKash<br>
                                  2. Enter your bKash number and transaction ID above<br>
                                  3. Click "Pay Now" for manual verification
                               </div>
@@ -2019,21 +2047,21 @@
             setPaymentMessage("Payment recorded successfully!", false);
             await loadUserBookings();
             renderBookings();
-            
+
             // Show success toast
             showToast(
                `Payment successful! Your booking for ${booking.movieTitle} is confirmed.`,
-               'success'
+               "success"
             );
-            
+
             setTimeout(() => closeModal(), 800);
          } catch (error) {
             console.warn("Payment update failed", error);
             const errorMsg = "Unable to record payment. It will be saved locally.";
             setPaymentMessage(errorMsg, true);
-            
+
             // Show warning toast
-            showToast(errorMsg, 'warning');
+            showToast(errorMsg, "warning");
 
             // Fallback: update local booking copy
             try {
@@ -2071,15 +2099,32 @@
 
    async function generateTicketPDF(booking) {
       try {
+         // Show loading toast
+         showToast('Generating PDF ticket...', 'info', 2000);
+         
          await loadPDF();
+         
+         if (!window.jspdf || !window.jspdf.jsPDF) {
+            throw new Error('PDF library not loaded');
+         }
+         
          const { jsPDF } = window.jspdf;
          const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
-         doc.setFontSize(16);
-         doc.text("Movie Ticket", 10, 14);
-         doc.setFontSize(12);
-         doc.text(booking.movieTitle || "Untitled", 10, 24);
+         
+         // Header
+         doc.setFontSize(18);
+         doc.setFont(undefined, 'bold');
+         doc.text("MOVIE TICKET", 52.5, 15, { align: 'center' });
+         
+         // Movie title
+         doc.setFontSize(14);
+         doc.setFont(undefined, 'bold');
+         doc.text(booking.movieTitle || "Untitled", 10, 28);
+         
+         // Details
          doc.setFontSize(10);
-         doc.text(`Showtime: ${booking.showtime || "—"}`, 10, 34);
+         doc.setFont(undefined, 'normal');
+         doc.text(`Showtime: ${booking.showtime || "—"}`, 10, 38);
 
          // Extract seat codes properly
          const seats = Array.isArray(booking.seats)
@@ -2087,39 +2132,81 @@
                  .map((s) => (typeof s === "string" ? s : s?.seat || String(s)))
                  .join(", ")
             : "—";
-         doc.text(`Seats: ${seats}`, 10, 42);
+         doc.text(`Seats: ${seats}`, 10, 46);
 
          const price =
             typeof booking.totalPrice === "number"
                ? booking.totalPrice
                : booking.price || 0;
-         doc.text(`Total: ${formatCurrency(price)}`, 10, 50);
+         doc.text(`Total: ${formatCurrency(price)}`, 10, 54);
+         
+         // Booking ID
+         const bookingId = booking.id || booking._id || 'N/A';
+         doc.setFontSize(8);
+         doc.text(`Booking ID: ${bookingId}`, 10, 62);
 
+         // Generate QR Code
          const qrHost = document.createElement("div");
-         renderQRCode(qrHost, booking);
-         const img = qrHost.querySelector("img") || qrHost.querySelector("canvas");
-         if (img) {
-            const dataUrl = img.src || img.toDataURL("image/png");
-            doc.addImage(dataUrl, "PNG", 10, 58, 40, 40);
+         qrHost.style.position = 'absolute';
+         qrHost.style.left = '-9999px';
+         document.body.appendChild(qrHost);
+         
+         await renderQRCode(qrHost, booking);
+         
+         // Wait a bit for QR code to render
+         await new Promise(resolve => setTimeout(resolve, 500));
+         
+         const canvas = qrHost.querySelector("canvas");
+         if (canvas) {
+            const dataUrl = canvas.toDataURL("image/png");
+            doc.addImage(dataUrl, "PNG", 32.5, 70, 40, 40);
          }
+         
+         // Clean up
+         document.body.removeChild(qrHost);
+         
+         // Footer
+         doc.setFontSize(8);
+         doc.text("Thank you for your booking!", 52.5, 120, { align: 'center' });
 
-         doc.save(
-            `ticket-${(booking.movieTitle || "movie")
-               .toLowerCase()
-               .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.pdf`
-         );
+         // Save the PDF
+         const filename = `ticket-${(booking.movieTitle || "movie")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.pdf`;
+         doc.save(filename);
+         
+         // Show success toast
+         showToast('PDF ticket downloaded successfully!', 'success');
       } catch (error) {
          console.error("Unable to generate ticket PDF", error);
+         showToast('Failed to generate PDF. Please try again.', 'error');
       }
    }
 
    function loadPDF() {
       if (pdfPromise) return pdfPromise;
-      pdfPromise = import(
-         "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-      ).catch((error) => {
-         console.warn("PDF library failed to load", error);
+      
+      pdfPromise = new Promise((resolve, reject) => {
+         // Check if already loaded
+         if (window.jspdf && window.jspdf.jsPDF) {
+            resolve();
+            return;
+         }
+         
+         // Load the library
+         const script = document.createElement('script');
+         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+         script.onload = () => {
+            if (window.jspdf && window.jspdf.jsPDF) {
+               resolve();
+            } else {
+               reject(new Error('jsPDF library failed to initialize'));
+            }
+         };
+         script.onerror = () => reject(new Error('Failed to load jsPDF library'));
+         document.head.appendChild(script);
       });
+      
       return pdfPromise;
    }
 
@@ -2133,9 +2220,13 @@
             await safeFetch(`/bookings/${bookingId}`, { method: "DELETE" });
             localSeatCache.delete(`${booking.movieId}::${booking.showtime}`);
             await loadUserBookings();
+            
+            // Show success toast
+            showToast('Booking cancelled successfully!', 'success');
             return;
          } catch (error) {
             console.error("Remote cancellation failed, attempting local removal.", error);
+            showToast('Remote cancellation failed, cancelling locally...', 'warning');
          }
       }
 
@@ -2143,6 +2234,9 @@
       localSeatCache.delete(`${booking.movieId}::${booking.showtime}`);
       state.userBookings = loadLocalBookings();
       renderBookings();
+      
+      // Show success toast for local cancellation
+      showToast('Booking cancelled locally!', 'success');
    }
 
    function removeLocalBooking(bookingId) {
@@ -2358,19 +2452,21 @@
          setFormMessage(dom.adminCarouselFormMessage, "Slide saved successfully.", false);
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
          showToast(
-            slideId ? 'Carousel slide updated successfully!' : 'Carousel slide created successfully!',
-            'success'
+            slideId
+               ? "Carousel slide updated successfully!"
+               : "Carousel slide created successfully!",
+            "success"
          );
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Unable to save slide.";
          setFormMessage(dom.adminCarouselFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2386,16 +2482,16 @@
          await safeFetch(`/admin/carousel/${slideId}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
-         showToast('Carousel slide deleted successfully!', 'success');
+         showToast("Carousel slide deleted successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Delete failed.";
          setFormMessage(dom.adminCarouselFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2529,19 +2625,19 @@
          setFormMessage(dom.adminMovieFormMessage, "Movie saved successfully.", false);
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
          showToast(
-            movieId ? 'Movie updated successfully!' : 'Movie created successfully!',
-            'success'
+            movieId ? "Movie updated successfully!" : "Movie created successfully!",
+            "success"
          );
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Unable to save movie.";
          setFormMessage(dom.adminMovieFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2557,16 +2653,16 @@
          await safeFetch(`/admin/movies/${movieId}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
-         showToast('Movie deleted successfully!', 'success');
+         showToast("Movie deleted successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Delete failed.";
          setFormMessage(dom.adminMovieFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2676,19 +2772,21 @@
          setFormMessage(dom.adminUpcomingFormMessage, "Upcoming release saved.", false);
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
          showToast(
-            upcomingId ? 'Upcoming release updated successfully!' : 'Upcoming release created successfully!',
-            'success'
+            upcomingId
+               ? "Upcoming release updated successfully!"
+               : "Upcoming release created successfully!",
+            "success"
          );
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Unable to save upcoming release.";
          setFormMessage(dom.adminUpcomingFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2704,16 +2802,16 @@
          await safeFetch(`/admin/upcoming/${id}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
-         
+
          // Show success toast
-         showToast('Upcoming release deleted successfully!', 'success');
+         showToast("Upcoming release deleted successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Delete failed.";
          setFormMessage(dom.adminUpcomingFormMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2777,16 +2875,16 @@
          dom.adminMediaForm.reset();
          setFormMessage(dom.adminMediaMessage, "Upload complete.", false);
          await loadAdminResources();
-         
+
          // Show success toast
-         showToast('Media uploaded successfully!', 'success');
+         showToast("Media uploaded successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Upload failed.";
          setFormMessage(dom.adminMediaMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2803,16 +2901,16 @@
             applyConfig(state.config);
             populateConfigForm();
          }
-         
+
          // Show success toast
-         showToast('Media assigned successfully!', 'success');
+         showToast("Media assigned successfully!", "success");
       } catch (error) {
          console.error("Unable to assign media", error);
          const errorMsg = error.message || "Assignment failed.";
          setFormMessage(dom.adminMediaMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2821,16 +2919,16 @@
       try {
          await safeFetch(`/admin/media/${id}`, { method: "DELETE" });
          await loadAdminResources();
-         
+
          // Show success toast
-         showToast('Media deleted successfully!', 'success');
+         showToast("Media deleted successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Delete failed.";
          setFormMessage(dom.adminMediaMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2929,16 +3027,16 @@
          applyConfig(state.config);
          populateConfigForm();
          setFormMessage(dom.adminConfigMessage, "Configuration updated.", false);
-         
+
          // Show success toast
-         showToast('Configuration updated successfully!', 'success');
+         showToast("Configuration updated successfully!", "success");
       } catch (error) {
          console.error(error);
          const errorMsg = error.message || "Unable to save configuration.";
          setFormMessage(dom.adminConfigMessage, errorMsg, true);
-         
+
          // Show error toast
-         showToast(errorMsg, 'error');
+         showToast(errorMsg, "error");
       }
    }
 
@@ -2960,40 +3058,40 @@
     * @param {string} type - Type of toast: 'success', 'error', 'info', 'warning'
     * @param {number} duration - Duration in milliseconds (default: 4000)
     */
-   function showToast(message, type = 'info', duration = 4000) {
-      const container = document.getElementById('toastContainer');
-      const backdrop = document.getElementById('toastBackdrop');
+   function showToast(message, type = "info", duration = 4000) {
+      const container = document.getElementById("toastContainer");
+      const backdrop = document.getElementById("toastBackdrop");
       if (!container) return;
 
       // Show backdrop
       if (backdrop) {
-         backdrop.classList.add('active');
+         backdrop.classList.add("active");
       }
 
       // Create toast element
-      const toast = document.createElement('div');
+      const toast = document.createElement("div");
       toast.className = `toast toast-${type}`;
-      
+
       // Determine icon based on type
       const icons = {
-         success: '✓',
-         error: '✕',
-         info: 'ℹ',
-         warning: '⚠'
+         success: "✓",
+         error: "✕",
+         info: "ℹ",
+         warning: "⚠",
       };
-      
+
       // Determine title based on type
       const titles = {
-         success: 'Success',
-         error: 'Error',
-         info: 'Information',
-         warning: 'Warning'
+         success: "Success",
+         error: "Error",
+         info: "Information",
+         warning: "Warning",
       };
 
       toast.innerHTML = `
-         <div class="toast-icon">${icons[type] || 'ℹ'}</div>
+         <div class="toast-icon">${icons[type] || "ℹ"}</div>
          <div class="toast-content">
-            <p class="toast-title">${titles[type] || 'Notification'}</p>
+            <p class="toast-title">${titles[type] || "Notification"}</p>
             <p class="toast-message">${message}</p>
          </div>
          <button class="toast-close" aria-label="Close notification">×</button>
@@ -3004,8 +3102,8 @@
       container.appendChild(toast);
 
       // Close button handler
-      const closeBtn = toast.querySelector('.toast-close');
-      closeBtn.addEventListener('click', () => removeToast(toast));
+      const closeBtn = toast.querySelector(".toast-close");
+      closeBtn.addEventListener("click", () => removeToast(toast));
 
       // Auto remove after duration
       const timeoutId = setTimeout(() => {
@@ -3018,24 +3116,24 @@
 
    function removeToast(toast) {
       if (!toast) return;
-      
+
       // Clear timeout if exists
       if (toast.dataset.timeoutId) {
          clearTimeout(parseInt(toast.dataset.timeoutId));
       }
 
       // Add removing animation
-      toast.classList.add('toast-removing');
-      
+      toast.classList.add("toast-removing");
+
       // Remove after animation completes
       setTimeout(() => {
          toast.remove();
-         
+
          // Hide backdrop if no more toasts
-         const container = document.getElementById('toastContainer');
-         const backdrop = document.getElementById('toastBackdrop');
+         const container = document.getElementById("toastContainer");
+         const backdrop = document.getElementById("toastBackdrop");
          if (container && backdrop && container.children.length === 0) {
-            backdrop.classList.remove('active');
+            backdrop.classList.remove("active");
          }
       }, 300);
    }
