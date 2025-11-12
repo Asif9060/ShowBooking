@@ -1020,18 +1020,26 @@
       items.forEach((item) => {
          const card = document.createElement("article");
          card.className = "movie-card";
-         const colors = Array.isArray(item.posterColor)
-            ? item.posterColor
-            : ["#3a7bd5", "#00d2ff"];
+         
+         // Use poster image if available, otherwise use gradient
+         const posterStyle = item.posterUrl
+            ? `background-image: url('${item.posterUrl}'); background-size: cover; background-position: center;`
+            : (() => {
+                 const colors = Array.isArray(item.posterColor)
+                    ? item.posterColor
+                    : ["#3a7bd5", "#00d2ff"];
+                 return `background-image: linear-gradient(180deg, ${colors[0]}, ${colors[1]});`;
+              })();
+         
          card.innerHTML = `
-               <div class="poster" style="background-image: linear-gradient(180deg, ${
-                  colors[0]
-               }, ${colors[1]});">
+               <div class="poster" style="${posterStyle}">
+                  ${item.posterUrl ? `<img class="poster-img" src="${item.posterUrl}" alt="${item.title || 'Upcoming movie'}" />` : ''}
                   <div class="poster-title">${item.title || "Untitled"}</div>
                </div>
                <div class="card-body">
                   <h3 class="movie-title">${item.title || "Untitled"}</h3>
                   <p class="meta">${formatDate(item.releaseDate) || "TBA"}</p>
+                  ${item.summary ? `<p class="movie-synopsis">${item.summary}</p>` : ''}
                </div>
             `;
          dom.comingGrid.appendChild(card);
