@@ -40,7 +40,7 @@ app.use(
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'x-session-token'],
       exposedHeaders: ['Set-Cookie'],
       maxAge: 86400, // 24 hours
    })
