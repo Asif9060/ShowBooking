@@ -39,6 +39,10 @@ app.use(
          }
       },
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+      exposedHeaders: ['Set-Cookie'],
+      maxAge: 86400, // 24 hours
    })
 );
 app.use(express.json({ limit: "2mb" }));
