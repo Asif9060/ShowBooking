@@ -1436,6 +1436,51 @@ button:focus {
    line-height: 1.5;
 }
 
+/* bKash Payment Info Box */
+.payment-info-box {
+   padding: 16px;
+   margin-bottom: 20px;
+   border-radius: 12px;
+   background: linear-gradient(135deg, rgba(229, 62, 141, 0.15), rgba(189, 8, 106, 0.15));
+   border: 2px solid rgba(229, 62, 141, 0.4);
+   text-align: center;
+   box-shadow: 0 4px 16px rgba(229, 62, 141, 0.2);
+}
+
+.payment-info-box strong {
+   display: block;
+   color: rgba(255, 255, 255, 0.9);
+   font-size: 0.9rem;
+   margin-bottom: 8px;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+.bkash-merchant-number {
+   font-size: 1.8rem;
+   font-weight: 700;
+   color: #e53e8d;
+   text-shadow: 0 2px 8px rgba(229, 62, 141, 0.4);
+   margin: 12px 0;
+   letter-spacing: 2px;
+   font-family: 'Courier New', monospace;
+   user-select: all;
+   cursor: pointer;
+}
+
+.bkash-merchant-number:hover {
+   color: #ff4da6;
+   text-shadow: 0 2px 12px rgba(229, 62, 141, 0.6);
+}
+
+.payment-info-box .payment-help {
+   margin-top: 12px;
+   background: rgba(0, 0, 0, 0.3);
+   border-color: rgba(229, 62, 141, 0.3);
+   color: rgba(255, 255, 255, 0.8);
+   text-align: left;
+}
+
 /* Payment Message */
 .payment-message {
    margin-top: 16px;

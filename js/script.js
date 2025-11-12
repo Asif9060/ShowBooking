@@ -1020,7 +1020,7 @@
       items.forEach((item) => {
          const card = document.createElement("article");
          card.className = "movie-card";
-         
+
          // Use poster image if available, otherwise use gradient
          const posterStyle = item.posterUrl
             ? `background-image: url('${item.posterUrl}'); background-size: cover; background-position: center;`
@@ -1030,16 +1030,22 @@
                     : ["#3a7bd5", "#00d2ff"];
                  return `background-image: linear-gradient(180deg, ${colors[0]}, ${colors[1]});`;
               })();
-         
+
          card.innerHTML = `
                <div class="poster" style="${posterStyle}">
-                  ${item.posterUrl ? `<img class="poster-img" src="${item.posterUrl}" alt="${item.title || 'Upcoming movie'}" />` : ''}
+                  ${
+                     item.posterUrl
+                        ? `<img class="poster-img" src="${item.posterUrl}" alt="${
+                             item.title || "Upcoming movie"
+                          }" />`
+                        : ""
+                  }
                   <div class="poster-title">${item.title || "Untitled"}</div>
                </div>
                <div class="card-body">
                   <h3 class="movie-title">${item.title || "Untitled"}</h3>
                   <p class="meta">${formatDate(item.releaseDate) || "TBA"}</p>
-                  ${item.summary ? `<p class="movie-synopsis">${item.summary}</p>` : ''}
+                  ${item.summary ? `<p class="movie-synopsis">${item.summary}</p>` : ""}
                </div>
             `;
          dom.comingGrid.appendChild(card);
@@ -1846,16 +1852,24 @@
                         </div>
                         <div class="payment-form hidden" data-payment-form="bkash">
                            <div class="payment-grid">
+                              <div class="payment-info-box">
+                                 <strong>Send Money To:</strong>
+                                 <p class="bkash-merchant-number">01970174297</p>
+                                 <small class="payment-help">Send the exact amount to this bKash number, then enter your details below.</small>
+                              </div>
                               <label>
-                                 bKash Account Number
-                                 <input type="text" name="bkashNumber" inputmode="numeric" placeholder="01XXXXXXXXX" />
+                                 Your bKash Account Number
+                                 <input type="text" name="bkashNumber" inputmode="numeric" placeholder="01XXXXXXXXX" required />
                               </label>
                               <label>
                                  bKash Transaction ID
-                                 <input type="text" name="bkashTransaction" placeholder="Enter the TrxID" />
+                                 <input type="text" name="bkashTransaction" placeholder="Enter the TrxID after sending money" required />
                               </label>
                               <div class="payment-help">
-                                 After sending the payment via bKash, paste the transaction ID above for manual verification.
+                                 <strong>Steps:</strong><br>
+                                 1. Send <strong>${formatCurrency(total)}</strong> to <strong>01970174297</strong> via bKash<br>
+                                 2. Enter your bKash number and transaction ID above<br>
+                                 3. Click "Pay Now" for manual verification
                               </div>
                            </div>
                         </div>
