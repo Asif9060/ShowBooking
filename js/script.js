@@ -2962,7 +2962,13 @@
     */
    function showToast(message, type = 'info', duration = 4000) {
       const container = document.getElementById('toastContainer');
+      const backdrop = document.getElementById('toastBackdrop');
       if (!container) return;
+
+      // Show backdrop
+      if (backdrop) {
+         backdrop.classList.add('active');
+      }
 
       // Create toast element
       const toast = document.createElement('div');
@@ -2972,7 +2978,7 @@
       const icons = {
          success: '✓',
          error: '✕',
-         info: 'i',
+         info: 'ℹ',
          warning: '⚠'
       };
       
@@ -2980,12 +2986,12 @@
       const titles = {
          success: 'Success',
          error: 'Error',
-         info: 'Info',
+         info: 'Information',
          warning: 'Warning'
       };
 
       toast.innerHTML = `
-         <div class="toast-icon">${icons[type] || 'i'}</div>
+         <div class="toast-icon">${icons[type] || 'ℹ'}</div>
          <div class="toast-content">
             <p class="toast-title">${titles[type] || 'Notification'}</p>
             <p class="toast-message">${message}</p>
@@ -3024,6 +3030,13 @@
       // Remove after animation completes
       setTimeout(() => {
          toast.remove();
+         
+         // Hide backdrop if no more toasts
+         const container = document.getElementById('toastContainer');
+         const backdrop = document.getElementById('toastBackdrop');
+         if (container && backdrop && container.children.length === 0) {
+            backdrop.classList.remove('active');
+         }
       }, 300);
    }
 
