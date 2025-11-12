@@ -50,6 +50,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan(env.accessLogFormat));
 
+// Health check endpoint for UptimeRobot and monitoring services
+app.get("/", (req, res) => {
+   res.status(200).json({
+      status: "ok",
+      service: "Show Booking API",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+   });
+});
+
+app.get("/health", (req, res) => {
+   res.status(200).json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+   });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/carousel", carouselRoutes);
