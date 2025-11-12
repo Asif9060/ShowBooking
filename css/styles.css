@@ -802,6 +802,7 @@ main.container {
 }
 .modal {
    width: min(940px, 95%);
+   max-height: 90vh;
    background: linear-gradient(180deg, #071427, #06112a);
    border-radius: 12px;
    padding: 18px;
@@ -810,7 +811,29 @@ main.container {
    transform: translateY(14px) scale(0.96);
    opacity: 0;
    transition: transform 220ms ease, opacity 220ms ease;
+   overflow-y: auto;
+   overflow-x: hidden;
 }
+
+/* Custom scrollbar for modal */
+.modal::-webkit-scrollbar {
+   width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+   background: rgba(255, 255, 255, 0.05);
+   border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+   background: rgba(46, 230, 167, 0.3);
+   border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+   background: rgba(46, 230, 167, 0.5);
+}
+
 .modal-overlay.show .modal {
    transform: translateY(0) scale(1);
    opacity: 1;
@@ -1513,11 +1536,34 @@ button:focus {
 /* Booking Payment Modal Specific */
 .booking-payment-modal {
    max-width: 600px;
+   max-height: 85vh;
    margin: 0 auto;
+   display: flex;
+   flex-direction: column;
 }
 
 .booking-payment-modal .modal-body {
    padding: 24px 0;
+   flex: 1;
+   overflow-y: auto;
+}
+
+.booking-payment-modal .modal-header {
+   position: sticky;
+   top: 0;
+   background: linear-gradient(180deg, #071427, #06112a);
+   z-index: 10;
+   padding-bottom: 12px;
+   margin-bottom: 12px;
+}
+
+.booking-payment-modal .modal-footer {
+   position: sticky;
+   bottom: 0;
+   background: linear-gradient(180deg, #06112a, #071427);
+   z-index: 10;
+   padding-top: 12px;
+   margin-top: 12px;
 }
 
 .booking-payment-modal .modal-body > p {
