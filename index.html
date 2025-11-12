@@ -334,94 +334,21 @@
                         data-admin-panel="carousel">
                         <header class="admin-panel-header">
                            <h3>Homepage Carousel</h3>
-                           <p>Control the slides that appear in the hero carousel.</p>
+                           <p>Upload images that appear in the hero carousel.</p>
                         </header>
                         <form
                            id="adminCarouselForm"
                            class="admin-form"
                            autocomplete="off">
                            <input type="hidden" id="adminCarouselId" name="carouselId" />
-                           <div class="form-grid">
-                              <label
-                                 >Title
-                                 <input name="title" id="adminCarouselTitle" required />
-                              </label>
-                              <label
-                                 >Subtitle
-                                 <input name="subtitle" id="adminCarouselSubtitle" />
-                              </label>
-                              <label
-                                 >Status
-                                 <select name="status" id="adminCarouselStatus">
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                 </select>
-                              </label>
-                           </div>
                            <label
-                              >Description
-                              <textarea
-                                 name="description"
-                                 id="adminCarouselDescription"
-                                 rows="3"
-                                 placeholder="Short copy for the slide"></textarea>
-                           </label>
-                           <div class="form-grid">
-                              <label
-                                 >CTA Text
-                                 <input
-                                    name="ctaText"
-                                    id="adminCarouselCtaText"
-                                    placeholder="Book Tickets" />
-                              </label>
-                              <label
-                                 >CTA URL
-                                 <input
-                                    name="ctaUrl"
-                                    id="adminCarouselCtaUrl"
-                                    type="url"
-                                    placeholder="https://example.com" />
-                              </label>
-                              <label
-                                 >Linked Movie ID (optional)
-                                 <input
-                                    name="movieId"
-                                    id="adminCarouselMovieId"
-                                    placeholder="Movie ObjectId" />
-                              </label>
-                           </div>
-                           <div class="form-grid">
-                              <label
-                                 >Highlights (comma separated)
-                                 <input
-                                    name="highlights"
-                                    id="adminCarouselHighlights"
-                                    placeholder="Premiere Night, Dolby Atmos" />
-                              </label>
-                              <label
-                                 >Gradient Colors (comma separated)
-                                 <input
-                                    name="posterColor"
-                                    id="adminCarouselColors"
-                                    placeholder="#1f2937, #0f172a" />
-                              </label>
-                              <label
-                                 >Priority
-                                 <input
-                                    name="priority"
-                                    id="adminCarouselPriority"
-                                    type="number"
-                                    step="1"
-                                    placeholder="0" />
-                              </label>
-                           </div>
-                           <label
-                              >Backdrop Image
+                              >Carousel Image
                               <input
                                  name="posterFile"
                                  id="adminCarouselPosterFile"
                                  type="file"
-                                 accept="image/*" />
+                                 accept="image/*"
+                                 required />
                            </label>
                            <input
                               type="hidden"
@@ -431,9 +358,11 @@
                               type="hidden"
                               name="posterPublicId"
                               id="adminCarouselPosterPublicId" />
+                           <input type="hidden" name="status" id="adminCarouselStatus" value="published" />
+                           <input type="hidden" name="title" id="adminCarouselTitle" value="Carousel Slide" />
                            <div class="form-actions">
                               <button type="submit" class="btn btn-primary">
-                                 Save Slide
+                                 Upload Image
                               </button>
                               <button
                                  type="button"

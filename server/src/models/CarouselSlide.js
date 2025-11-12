@@ -2,14 +2,14 @@ import mongoose from "../config/db.js";
 
 const CarouselSlideSchema = new mongoose.Schema(
    {
-      title: { type: String, required: true, trim: true },
+      title: { type: String, required: true, trim: true, default: "Carousel Slide" },
       subtitle: { type: String, trim: true },
       description: { type: String, trim: true },
       highlights: { type: [String], default: [] },
       ctaText: { type: String, trim: true },
       ctaUrl: { type: String, trim: true },
       movieId: { type: mongoose.Schema.Types.ObjectId, ref: "Movie", default: undefined },
-      status: { type: String, enum: ["draft", "published"], default: "draft" },
+      status: { type: String, enum: ["draft", "published"], default: "published" },
       priority: { type: Number, default: 0 },
       posterUrl: { type: String, trim: true },
       posterPublicId: { type: String, trim: true },

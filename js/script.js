@@ -2250,19 +2250,6 @@
       state.editing.carouselId = slideId;
       const controls = dom.adminCarouselForm.elements;
       controls.namedItem("carouselId").value = slideId;
-      controls.namedItem("title").value = slide.title || "";
-      controls.namedItem("subtitle").value = slide.subtitle || "";
-      controls.namedItem("status").value = slide.status || "draft";
-      controls.namedItem("description").value = slide.description || "";
-      controls.namedItem("ctaText").value = slide.ctaText || "";
-      controls.namedItem("ctaUrl").value = slide.ctaUrl || "";
-      controls.namedItem("movieId").value = slide.movieId || "";
-      controls.namedItem("highlights").value = asList(slide.highlights);
-      controls.namedItem("posterColor").value = asList(slide.posterColor);
-      controls.namedItem("priority").value =
-         typeof slide.priority === "number" && Number.isFinite(slide.priority)
-            ? String(slide.priority)
-            : "";
 
       const posterUrlControl = controls.namedItem("posterUrl");
       if (posterUrlControl) posterUrlControl.value = slide.posterUrl || "";
@@ -2284,20 +2271,9 @@
       const slideId = formData.get("carouselId");
       const payload = new FormData();
 
-      payload.append("title", formData.get("title") || "");
-      payload.append("subtitle", formData.get("subtitle") || "");
-      payload.append("status", formData.get("status") || "draft");
-      payload.append("description", formData.get("description") || "");
-      payload.append("ctaText", formData.get("ctaText") || "");
-      payload.append("ctaUrl", formData.get("ctaUrl") || "");
-      payload.append("movieId", formData.get("movieId") || "");
-      payload.append("priority", formData.get("priority") || "");
-
-      const highlights = splitAndTrim(formData.get("highlights"));
-      payload.append("highlights", JSON.stringify(highlights));
-
-      const posterColors = splitAndTrim(formData.get("posterColor"));
-      payload.append("posterColor", JSON.stringify(posterColors));
+      // Only send required fields for carousel (title and status are hidden defaults)
+      payload.append("title", formData.get("title") || "Carousel Slide");
+      payload.append("status", formData.get("status") || "published");
 
       const existingPosterUrl = formData.get("posterUrl");
       if (typeof existingPosterUrl === "string") {

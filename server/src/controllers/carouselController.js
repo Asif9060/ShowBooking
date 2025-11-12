@@ -88,7 +88,7 @@ const normalizeCarouselPayload = (body = {}) => {
 };
 
 const carouselSchema = Joi.object({
-   title: Joi.string().trim().required(),
+   title: Joi.string().trim().optional().default("Carousel Slide"),
    subtitle: Joi.string().allow(""),
    description: Joi.string().allow(""),
    highlights: Joi.array().items(Joi.string()),
