@@ -30,7 +30,7 @@ app.use(
       origin: (origin, callback) => {
          // Allow requests with no origin (like mobile apps or curl requests)
          if (!origin) return callback(null, true);
-         
+
          if (env.clientOrigins.includes(origin)) {
             callback(null, true);
          } else {
@@ -39,9 +39,15 @@ app.use(
          }
       },
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'x-session-token'],
-      exposedHeaders: ['Set-Cookie'],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+         "Content-Type",
+         "Authorization",
+         "Cookie",
+         "X-Requested-With",
+         "x-session-token",
+      ],
+      exposedHeaders: ["Set-Cookie"],
       maxAge: 86400, // 24 hours
    })
 );

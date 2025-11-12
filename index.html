@@ -358,8 +358,16 @@
                               type="hidden"
                               name="posterPublicId"
                               id="adminCarouselPosterPublicId" />
-                           <input type="hidden" name="status" id="adminCarouselStatus" value="published" />
-                           <input type="hidden" name="title" id="adminCarouselTitle" value="Carousel Slide" />
+                           <input
+                              type="hidden"
+                              name="status"
+                              id="adminCarouselStatus"
+                              value="published" />
+                           <input
+                              type="hidden"
+                              name="title"
+                              id="adminCarouselTitle"
+                              value="Carousel Slide" />
                            <div class="form-actions">
                               <button type="submit" class="btn btn-primary">
                                  Upload Image
@@ -755,10 +763,22 @@
       </footer>
       <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
       <script>
+         // Detect if running in Electron
+         const isElectron = window.electron && window.electron.isElectron;
+         
          window.__APP_CONFIG__ = window.__APP_CONFIG__ || {
             apiBaseUrl:
-               window.localStorage.getItem("msb_api_base") || "https://showbooking-iqzi.onrender.com/api",
+               window.localStorage.getItem("msb_api_base") ||
+               "https://showbooking-iqzi.onrender.com/api",
          };
+         
+         // Log the detected environment
+         if (isElectron) {
+            console.log('[Config] Running in Electron desktop app - using remote backend');
+         } else {
+            console.log('[Config] Running in web browser - using remote backend');
+         }
+         console.log('[Config] API Base URL:', window.__APP_CONFIG__.apiBaseUrl);
       </script>
       <script src="js/script.js"></script>
    </body>
