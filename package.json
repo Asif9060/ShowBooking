@@ -1,59 +1,58 @@
 {
-  "name": "show-booking-desktop",
-  "version": "1.0.0",
-  "description": "Show Booking System - Desktop Application",
-  "main": "electron/main.js",
-  "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
-    "build": "electron-builder build --win --publish never",
-    "build:dir": "electron-builder build --win --dir"
-  },
-  "keywords": [
-    "electron",
-    "show-booking",
-    "desktop"
-  ],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
-  },
-  "dependencies": {
-    "electron-is-dev": "^2.0.0"
-  },
-  "build": {
-    "appId": "com.showbooking.app",
-    "productName": "Show Booking",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron/**/*",
-      "index.html",
-      "css/**/*",
-      "js/**/*",
-      "img/**/*",
-      "video/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
+   "name": "show-booking-desktop",
+   "version": "1.0.0",
+   "description": "Show Booking System - Desktop Application",
+   "main": "electron/main.js",
+   "scripts": {
+      "start": "electron .",
+      "dev": "electron . --dev",
+      "build": "electron-builder build --win --publish never",
+      "build:dir": "electron-builder build --win --dir"
+   },
+   "keywords": [
+      "electron",
+      "show-booking",
+      "desktop"
+   ],
+   "author": "",
+   "license": "ISC",
+   "devDependencies": {
+      "electron": "^28.0.0",
+      "electron-builder": "^24.9.1"
+   },
+   "dependencies": {
+      "electron-is-dev": "^2.0.0"
+   },
+   "build": {
+      "appId": "com.showbooking.app",
+      "productName": "Show Booking",
+      "directories": {
+         "output": "dist"
+      },
+      "files": [
+         "electron/**/*",
+         "index.html",
+         "css/**/*",
+         "js/**/*",
+         "img/**/*",
+         "video/**/*",
+         "package.json"
       ],
-      "icon": "img/logo.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "installerIcon": "img/logo.png",
-      "uninstallerIcon": "img/logo.png"
-    }
-  }
+      "win": {
+         "target": [
+            {
+               "target": "nsis",
+               "arch": [
+                  "x64"
+               ]
+            }
+         ]
+      },
+      "nsis": {
+         "oneClick": false,
+         "allowToChangeInstallationDirectory": true,
+         "createDesktopShortcut": true,
+         "createStartMenuShortcut": true
+      }
+   }
 }

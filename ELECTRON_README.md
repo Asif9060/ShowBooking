@@ -1,32 +1,22 @@
 # Show Booking - Electron Desktop Application# Show Booking Desktop Application
 
-
-
 This is a desktop version of the Show Booking System built with Electron. The app uses the remote backend hosted on Render, so no local server setup is required.A desktop application for the Show Booking System built with Electron.
-
-
 
 ## Prerequisites## Prerequisites
 
+-  Node.js (v18 or higher)- Node.js (v16 or higher)
 
+-  npm or yarn- MongoDB (running locally on port 27017)
 
-- Node.js (v18 or higher)- Node.js (v16 or higher)
-
-- npm or yarn- MongoDB (running locally on port 27017)
-
-- Internet connection (to connect to the remote backend)- Environment variables configured in `server/.env`
-
-
+-  Internet connection (to connect to the remote backend)- Environment variables configured in `server/.env`
 
 ## Remote Backend## Required Environment Variables
 
-
-
 The application connects to the backend hosted at:Create a `server/.env` file with:
 
-- **API URL:** `https://showbooking-iqzi.onrender.com/api`
+-  **API URL:** `https://showbooking-iqzi.onrender.com/api`
 
-- **Frontend URL:** `https://show-booking-coral.vercel.app````env
+-  **Frontend URL:** `https://show-booking-coral.vercel.app````env
 
 PORT=4000
 
@@ -40,11 +30,11 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 1. Install dependencies:CLIENT_ORIGIN=http://localhost:4000,file://
 
-```bashNODE_ENV=production
+````bashNODE_ENV=production
 
 npm install```
 
-```
+````
 
 ## Installation
 
@@ -56,7 +46,7 @@ To run the app in development mode:```bash
 
 npm install
 
-```bash```
+`bash`
 
 npm start
 
@@ -80,11 +70,11 @@ This will open the Electron app with DevTools enabled and connect to the remote 
 
 Run the app in development mode:
 
-```bash```bash
+`bash`bash
 
 npm run buildnpm run dev
 
-``````
+````
 
 
 
@@ -108,17 +98,13 @@ Build the Windows .exe installer:
 
 npm run build:dirnpm run build
 
-``````
-
-
+````
 
 This creates an unpacked folder in `dist/win-unpacked/` that you can run directly.The installer will be created in the `dist` folder.
 
-
-
 ## DistributionFor a portable build without installer:
 
-```bash
+````bash
 
 The built `.exe` file can be distributed to users. When they run the installer:npm run build:dir
 
@@ -158,31 +144,31 @@ The built `.exe` file can be distributed to users. When they run the installer:n
 
    - Falls back to remote backend in web browser
 
-```
+````
 
 Show Booking/## Troubleshooting
 
 ├── electron/
 
-│   ├── main.js          # Main Electron process### MongoDB Connection Error
+│ ├── main.js # Main Electron process### MongoDB Connection Error
 
-│   └── preload.js       # Preload script for securityEnsure MongoDB is running:
+│ └── preload.js # Preload script for securityEnsure MongoDB is running:
 
-├── index.html           # Frontend entry point```bash
+├── index.html # Frontend entry point```bash
 
-├── css/                 # Stylesheetsmongod
+├── css/ # Stylesheetsmongod
 
-├── js/                  # Frontend JavaScript```
+├── js/ # Frontend JavaScript```
 
-├── img/                 # Images and icons
+├── img/ # Images and icons
 
-├── video/               # Video assets### Port Already in Use
+├── video/ # Video assets### Port Already in Use
 
-├── package.json         # Electron configurationChange the PORT in `electron/main.js` and `server/.env`
+├── package.json # Electron configurationChange the PORT in `electron/main.js` and `server/.env`
 
-└── ELECTRON_README.md   # This file
+└── ELECTRON_README.md # This file
 
-```### Build Fails
+````### Build Fails
 
 Ensure all dependencies are installed:
 
@@ -192,7 +178,7 @@ npm install
 
 The app automatically uses the remote backend. If you want to change the backend URL:cd server && npm install
 
-```
+````
 
 1. Open browser DevTools (F12)
 
@@ -202,48 +188,50 @@ The app automatically uses the remote backend. If you want to change the backend
 
 4. Restart the appThe built `.exe` file in `dist/` can be distributed to users. They need:
 
-- Windows 10 or higher (64-bit)
+-  Windows 10 or higher (64-bit)
 
 ## Troubleshooting- MongoDB installed and running locally
 
-- Or a remote MongoDB connection string configured
+-  Or a remote MongoDB connection string configured
 
 ### App won't start
 
-- Check your internet connection## Notes
+-  Check your internet connection## Notes
 
-- Verify the backend at https://showbooking-iqzi.onrender.com/health is accessible
+-  Verify the backend at https://showbooking-iqzi.onrender.com/health is accessible
 
-- The app bundles both frontend and backend
+-  The app bundles both frontend and backend
 
 ### Can't build the installer- Data is stored in local MongoDB
 
-- Make sure you have installed all dependencies: `npm install`- Cloudinary credentials needed for image uploads
+-  Make sure you have installed all dependencies: `npm install`- Cloudinary credentials needed for image uploads
 
-- Check that you have write permissions to the `dist/` folder- The app can work offline (except for Cloudinary uploads)
+-  Check that you have write permissions to the `dist/` folder- The app can work offline (except for Cloudinary uploads)
 
-- Try building to directory first: `npm run build:dir`
+-  Try building to directory first: `npm run build:dir`
 
 ### Backend connection errors
-- Ensure you have an active internet connection
-- Check if Render backend is running (visit the health endpoint)
-- Clear localStorage and restart the app
+
+-  Ensure you have an active internet connection
+-  Check if Render backend is running (visit the health endpoint)
+-  Clear localStorage and restart the app
 
 ## Technical Details
 
-- **Electron Version:** 28.x
-- **Node Integration:** Disabled (for security)
-- **Context Isolation:** Enabled
-- **Backend:** Remote (Render)
-- **Target Platform:** Windows x64
-- **Installer Type:** NSIS
+-  **Electron Version:** 28.x
+-  **Node Integration:** Disabled (for security)
+-  **Context Isolation:** Enabled
+-  **Backend:** Remote (Render)
+-  **Target Platform:** Windows x64
+-  **Installer Type:** NSIS
 
 ## Support
 
 For issues related to:
-- Desktop app: Check this README
-- Backend API: Contact backend administrator
-- Frontend features: Check main README.md
+
+-  Desktop app: Check this README
+-  Backend API: Contact backend administrator
+-  Frontend features: Check main README.md
 
 ---
 

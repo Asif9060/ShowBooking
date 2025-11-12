@@ -725,7 +725,7 @@
                   <a href="#" data-view="bookings">My Tickets</a>
                </nav>
                <div class="footer-contact">
-                  <a href="mailto:support@example.com">samsul261103@gmail.com</a>
+                  <a href="mailto:samsul261103@gmail.com">samsul261103@gmail.com</a>
                   <span>01970174297</span>
                </div>
             </div>
@@ -764,20 +764,22 @@
       <script>
          // Detect if running in Electron
          const isElectron = window.electron && window.electron.isElectron;
-         
+
          window.__APP_CONFIG__ = window.__APP_CONFIG__ || {
             apiBaseUrl:
                window.localStorage.getItem("msb_api_base") ||
                "https://showbooking-iqzi.onrender.com/api",
          };
-         
+
          // Log the detected environment
          if (isElectron) {
-            console.log('[Config] Running in Electron desktop app - using remote backend');
+            console.log(
+               "[Config] Running in Electron desktop app - using remote backend"
+            );
          } else {
-            console.log('[Config] Running in web browser - using remote backend');
+            console.log("[Config] Running in web browser - using remote backend");
          }
-         console.log('[Config] API Base URL:', window.__APP_CONFIG__.apiBaseUrl);
+         console.log("[Config] API Base URL:", window.__APP_CONFIG__.apiBaseUrl);
       </script>
       <script src="js/script.js"></script>
    </body>
