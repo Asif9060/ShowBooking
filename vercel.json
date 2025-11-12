@@ -1,0 +1,6 @@
+{
+  "buildCommand": "echo 'No build needed - static frontend'",
+  "outputDirectory": ".",
+  "installCommand": "echo 'Skipping install'",
+  "framework": null
+}
