@@ -6,9 +6,9 @@
    "scripts": {
       "start": "electron .",
       "dev": "electron . --dev",
-      "build:electron": "electron-builder build --win --publish never",
-      "build:electron:dir": "electron-builder build --win --dir",
-      "build": "echo 'Static site - no build needed'"
+      "build": "electron-builder build --win --publish never",
+      "build:dir": "electron-builder build --win --dir",
+      "build:vercel": "echo 'Static site - no build needed'"
    },
    "keywords": [
       "electron",
