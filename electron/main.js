@@ -38,8 +38,10 @@ function createWindow() {
       console.error("[Electron] Failed to load index.html:", err);
    });
 
-   // Open DevTools for debugging
-   mainWindow.webContents.openDevTools();
+   // Open DevTools only in development mode
+   if (isDev) {
+      mainWindow.webContents.openDevTools();
+   }
 
    // Log when page finishes loading
    mainWindow.webContents.on("did-finish-load", () => {
