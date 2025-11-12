@@ -414,14 +414,6 @@ main.container {
    gap: 8px;
    flex-wrap: wrap;
 }
-.ticket-qr {
-   width: 84px;
-   height: 84px;
-   flex: 0 0 84px;
-   background: #fff;
-   border-radius: 6px;
-   padding: 4px;
-}
 .bookings-summary {
    display: flex;
    justify-content: space-between;

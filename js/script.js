@@ -303,7 +303,6 @@
 
    let isAuthInitialized = false;
    let overlayHideTimer = null;
-   let pdfPromise = null;
    let authMode = "signin";
 
    const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -1718,9 +1717,7 @@
       const title = root.querySelector(".ticket-title");
       const meta = root.querySelector(".ticket-meta");
       const thumb = root.querySelector(".ticket-thumb");
-      const downloadBtn = root.querySelector(".download-ticket");
       const cancelBtn = root.querySelector(".cancel-ticket");
-      const qrContainer = root.querySelector(".ticket-qr");
 
       const seats = Array.isArray(booking.seats)
          ? booking.seats
@@ -1760,10 +1757,6 @@
          meta.textContent = pieces.join(" • ");
       }
 
-      if (downloadBtn) {
-         downloadBtn.addEventListener("click", () => generateTicketPDF(booking));
-      }
-
       if (cancelBtn) {
          cancelBtn.addEventListener("click", () => cancelBooking(booking));
       }
@@ -1787,53 +1780,6 @@
       } catch (err) {
          // ignore UI attach errors
       }
-
-      if (qrContainer) {
-         renderQRCode(qrContainer, booking);
-      }
-   }
-
-   function renderQRCode(container, booking) {
-      return new Promise((resolve, reject) => {
-         if (!container) {
-            reject(new Error('No container provided'));
-            return;
-         }
-         
-         if (typeof QRCode === "undefined") {
-            console.warn('QRCode library not loaded');
-            reject(new Error('QRCode library not loaded'));
-            return;
-         }
-         
-         container.innerHTML = "";
-         
-         try {
-            const qrData = JSON.stringify({
-               bookingId: booking.id || booking._id,
-               movieId: booking.movieId,
-               movieTitle: booking.movieTitle,
-               showtime: booking.showtime,
-               seats: booking.seats,
-               totalPrice: booking.totalPrice || booking.price
-            });
-            
-            const qr = new QRCode(container, {
-               text: qrData,
-               width: 128,
-               height: 128,
-               colorDark: "#000000",
-               colorLight: "#ffffff",
-               correctLevel: QRCode.CorrectLevel.H
-            });
-            
-            // QR code generation is synchronous, resolve immediately
-            setTimeout(() => resolve(qr), 100);
-         } catch (error) {
-            console.warn("Unable to render QR code", error);
-            reject(error);
-         }
-      });
    }
 
    function openBookingPaymentModal(booking) {
@@ -2095,119 +2041,6 @@
 
       openModal(container);
       setPaymentMethod("card");
-   }
-
-   async function generateTicketPDF(booking) {
-      try {
-         // Show loading toast
-         showToast('Generating PDF ticket...', 'info', 2000);
-         
-         await loadPDF();
-         
-         if (!window.jspdf || !window.jspdf.jsPDF) {
-            throw new Error('PDF library not loaded');
-         }
-         
-         const { jsPDF } = window.jspdf;
-         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
-         
-         // Header
-         doc.setFontSize(18);
-         doc.setFont(undefined, 'bold');
-         doc.text("MOVIE TICKET", 52.5, 15, { align: 'center' });
-         
-         // Movie title
-         doc.setFontSize(14);
-         doc.setFont(undefined, 'bold');
-         doc.text(booking.movieTitle || "Untitled", 10, 28);
-         
-         // Details
-         doc.setFontSize(10);
-         doc.setFont(undefined, 'normal');
-         doc.text(`Showtime: ${booking.showtime || "—"}`, 10, 38);
-
-         // Extract seat codes properly
-         const seats = Array.isArray(booking.seats)
-            ? booking.seats
-                 .map((s) => (typeof s === "string" ? s : s?.seat || String(s)))
-                 .join(", ")
-            : "—";
-         doc.text(`Seats: ${seats}`, 10, 46);
-
-         const price =
-            typeof booking.totalPrice === "number"
-               ? booking.totalPrice
-               : booking.price || 0;
-         doc.text(`Total: ${formatCurrency(price)}`, 10, 54);
-         
-         // Booking ID
-         const bookingId = booking.id || booking._id || 'N/A';
-         doc.setFontSize(8);
-         doc.text(`Booking ID: ${bookingId}`, 10, 62);
-
-         // Generate QR Code
-         const qrHost = document.createElement("div");
-         qrHost.style.position = 'absolute';
-         qrHost.style.left = '-9999px';
-         document.body.appendChild(qrHost);
-         
-         await renderQRCode(qrHost, booking);
-         
-         // Wait a bit for QR code to render
-         await new Promise(resolve => setTimeout(resolve, 500));
-         
-         const canvas = qrHost.querySelector("canvas");
-         if (canvas) {
-            const dataUrl = canvas.toDataURL("image/png");
-            doc.addImage(dataUrl, "PNG", 32.5, 70, 40, 40);
-         }
-         
-         // Clean up
-         document.body.removeChild(qrHost);
-         
-         // Footer
-         doc.setFontSize(8);
-         doc.text("Thank you for your booking!", 52.5, 120, { align: 'center' });
-
-         // Save the PDF
-         const filename = `ticket-${(booking.movieTitle || "movie")
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.pdf`;
-         doc.save(filename);
-         
-         // Show success toast
-         showToast('PDF ticket downloaded successfully!', 'success');
-      } catch (error) {
-         console.error("Unable to generate ticket PDF", error);
-         showToast('Failed to generate PDF. Please try again.', 'error');
-      }
-   }
-
-   function loadPDF() {
-      if (pdfPromise) return pdfPromise;
-      
-      pdfPromise = new Promise((resolve, reject) => {
-         // Check if already loaded
-         if (window.jspdf && window.jspdf.jsPDF) {
-            resolve();
-            return;
-         }
-         
-         // Load the library
-         const script = document.createElement('script');
-         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-         script.onload = () => {
-            if (window.jspdf && window.jspdf.jsPDF) {
-               resolve();
-            } else {
-               reject(new Error('jsPDF library failed to initialize'));
-            }
-         };
-         script.onerror = () => reject(new Error('Failed to load jsPDF library'));
-         document.head.appendChild(script);
-      });
-      
-      return pdfPromise;
    }
 
    async function cancelBooking(booking) {
