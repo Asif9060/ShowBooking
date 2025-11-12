@@ -706,14 +706,22 @@
          if (state.isAdmin) {
             await loadAdminResources();
          }
+         
+         // Show success toast
+         showToast(
+            authMode === "signup" 
+               ? "Account created successfully! Welcome aboard." 
+               : "Signed in successfully! Welcome back.",
+            'success'
+         );
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminLoginMessage,
-            error.message ||
-               (authMode === "signup" ? "Unable to sign up." : "Unable to sign in."),
-            true
-         );
+         const errorMsg = error.message ||
+            (authMode === "signup" ? "Unable to sign up." : "Unable to sign in.");
+         setFormMessage(dom.adminLoginMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       } finally {
          dom.adminAuthSubmit?.removeAttribute("disabled");
          dom.adminToggleMode?.removeAttribute("disabled");
@@ -1363,9 +1371,19 @@
             );
             await loadUserBookings();
             closeModal();
+            
+            // Show success toast
+            showToast(
+               `Successfully booked ${seatList.length} seat${seatList.length > 1 ? 's' : ''} for ${movie.title}!`,
+               'success'
+            );
          } catch (error) {
             console.warn("Booking failed:", error);
-            alert("Unable to complete booking. Please try again.");
+            const errorMsg = "Unable to complete booking. Please try again.";
+            alert(errorMsg);
+            
+            // Show error toast
+            showToast(errorMsg, 'error');
          } finally {
             confirmBtn.disabled = false;
             confirmBtn.textContent = "Confirm Booking";
@@ -2001,13 +2019,21 @@
             setPaymentMessage("Payment recorded successfully!", false);
             await loadUserBookings();
             renderBookings();
+            
+            // Show success toast
+            showToast(
+               `Payment successful! Your booking for ${booking.movieTitle} is confirmed.`,
+               'success'
+            );
+            
             setTimeout(() => closeModal(), 800);
          } catch (error) {
             console.warn("Payment update failed", error);
-            setPaymentMessage(
-               "Unable to record payment. It will be saved locally.",
-               true
-            );
+            const errorMsg = "Unable to record payment. It will be saved locally.";
+            setPaymentMessage(errorMsg, true);
+            
+            // Show warning toast
+            showToast(errorMsg, 'warning');
 
             // Fallback: update local booking copy
             try {
@@ -2332,13 +2358,19 @@
          setFormMessage(dom.adminCarouselFormMessage, "Slide saved successfully.", false);
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast(
+            slideId ? 'Carousel slide updated successfully!' : 'Carousel slide created successfully!',
+            'success'
+         );
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminCarouselFormMessage,
-            error.message || "Unable to save slide.",
-            true
-         );
+         const errorMsg = error.message || "Unable to save slide.";
+         setFormMessage(dom.adminCarouselFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2354,13 +2386,16 @@
          await safeFetch(`/admin/carousel/${slideId}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast('Carousel slide deleted successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminCarouselFormMessage,
-            error.message || "Delete failed.",
-            true
-         );
+         const errorMsg = error.message || "Delete failed.";
+         setFormMessage(dom.adminCarouselFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2494,13 +2529,19 @@
          setFormMessage(dom.adminMovieFormMessage, "Movie saved successfully.", false);
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast(
+            movieId ? 'Movie updated successfully!' : 'Movie created successfully!',
+            'success'
+         );
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminMovieFormMessage,
-            error.message || "Unable to save movie.",
-            true
-         );
+         const errorMsg = error.message || "Unable to save movie.";
+         setFormMessage(dom.adminMovieFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2516,13 +2557,16 @@
          await safeFetch(`/admin/movies/${movieId}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast('Movie deleted successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminMovieFormMessage,
-            error.message || "Delete failed.",
-            true
-         );
+         const errorMsg = error.message || "Delete failed.";
+         setFormMessage(dom.adminMovieFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2632,13 +2676,19 @@
          setFormMessage(dom.adminUpcomingFormMessage, "Upcoming release saved.", false);
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast(
+            upcomingId ? 'Upcoming release updated successfully!' : 'Upcoming release created successfully!',
+            'success'
+         );
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminUpcomingFormMessage,
-            error.message || "Unable to save upcoming release.",
-            true
-         );
+         const errorMsg = error.message || "Unable to save upcoming release.";
+         setFormMessage(dom.adminUpcomingFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2654,13 +2704,16 @@
          await safeFetch(`/admin/upcoming/${id}`, { method: "DELETE" });
          await loadPublicContent();
          await loadAdminResources();
+         
+         // Show success toast
+         showToast('Upcoming release deleted successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminUpcomingFormMessage,
-            error.message || "Delete failed.",
-            true
-         );
+         const errorMsg = error.message || "Delete failed.";
+         setFormMessage(dom.adminUpcomingFormMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2724,9 +2777,16 @@
          dom.adminMediaForm.reset();
          setFormMessage(dom.adminMediaMessage, "Upload complete.", false);
          await loadAdminResources();
+         
+         // Show success toast
+         showToast('Media uploaded successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(dom.adminMediaMessage, error.message || "Upload failed.", true);
+         const errorMsg = error.message || "Upload failed.";
+         setFormMessage(dom.adminMediaMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2743,13 +2803,16 @@
             applyConfig(state.config);
             populateConfigForm();
          }
+         
+         // Show success toast
+         showToast('Media assigned successfully!', 'success');
       } catch (error) {
          console.error("Unable to assign media", error);
-         setFormMessage(
-            dom.adminMediaMessage,
-            error.message || "Assignment failed.",
-            true
-         );
+         const errorMsg = error.message || "Assignment failed.";
+         setFormMessage(dom.adminMediaMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2758,9 +2821,16 @@
       try {
          await safeFetch(`/admin/media/${id}`, { method: "DELETE" });
          await loadAdminResources();
+         
+         // Show success toast
+         showToast('Media deleted successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(dom.adminMediaMessage, error.message || "Delete failed.", true);
+         const errorMsg = error.message || "Delete failed.";
+         setFormMessage(dom.adminMediaMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2859,13 +2929,16 @@
          applyConfig(state.config);
          populateConfigForm();
          setFormMessage(dom.adminConfigMessage, "Configuration updated.", false);
+         
+         // Show success toast
+         showToast('Configuration updated successfully!', 'success');
       } catch (error) {
          console.error(error);
-         setFormMessage(
-            dom.adminConfigMessage,
-            error.message || "Unable to save configuration.",
-            true
-         );
+         const errorMsg = error.message || "Unable to save configuration.";
+         setFormMessage(dom.adminConfigMessage, errorMsg, true);
+         
+         // Show error toast
+         showToast(errorMsg, 'error');
       }
    }
 
@@ -2879,6 +2952,79 @@
       element.textContent = message || "";
       element.classList.toggle("error", Boolean(message && isError));
       element.classList.toggle("success", Boolean(message && !isError));
+   }
+
+   /**
+    * Show a toast notification
+    * @param {string} message - The message to display
+    * @param {string} type - Type of toast: 'success', 'error', 'info', 'warning'
+    * @param {number} duration - Duration in milliseconds (default: 4000)
+    */
+   function showToast(message, type = 'info', duration = 4000) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      // Determine icon based on type
+      const icons = {
+         success: '✓',
+         error: '✕',
+         info: 'i',
+         warning: '⚠'
+      };
+      
+      // Determine title based on type
+      const titles = {
+         success: 'Success',
+         error: 'Error',
+         info: 'Info',
+         warning: 'Warning'
+      };
+
+      toast.innerHTML = `
+         <div class="toast-icon">${icons[type] || 'i'}</div>
+         <div class="toast-content">
+            <p class="toast-title">${titles[type] || 'Notification'}</p>
+            <p class="toast-message">${message}</p>
+         </div>
+         <button class="toast-close" aria-label="Close notification">×</button>
+         <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+      `;
+
+      // Add to container
+      container.appendChild(toast);
+
+      // Close button handler
+      const closeBtn = toast.querySelector('.toast-close');
+      closeBtn.addEventListener('click', () => removeToast(toast));
+
+      // Auto remove after duration
+      const timeoutId = setTimeout(() => {
+         removeToast(toast);
+      }, duration);
+
+      // Store timeout ID for potential early removal
+      toast.dataset.timeoutId = timeoutId;
+   }
+
+   function removeToast(toast) {
+      if (!toast) return;
+      
+      // Clear timeout if exists
+      if (toast.dataset.timeoutId) {
+         clearTimeout(parseInt(toast.dataset.timeoutId));
+      }
+
+      // Add removing animation
+      toast.classList.add('toast-removing');
+      
+      // Remove after animation completes
+      setTimeout(() => {
+         toast.remove();
+      }, 300);
    }
 
    async function safeFetch(endpoint, options = {}) {
