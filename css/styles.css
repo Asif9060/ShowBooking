@@ -199,6 +199,8 @@ main.container {
    justify-content: center;
    gap: 14px;
    margin-top: clamp(18px, 3vw, 26px);
+   position: relative;
+   z-index: 10;
 }
 
 .hero-carousel__nav {
@@ -207,25 +209,34 @@ main.container {
    border-radius: 999px;
    border: 1px solid rgba(255, 255, 255, 0.18);
    background: rgba(8, 11, 20, 0.65);
+   backdrop-filter: blur(10px);
+   -webkit-backdrop-filter: blur(10px);
    color: #fff;
    font-size: 1.1rem;
+   font-weight: 600;
    display: inline-flex;
    align-items: center;
    justify-content: center;
    cursor: pointer;
    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+   position: relative;
+   z-index: 10;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .hero-carousel__nav:hover {
    transform: translateY(-2px);
    border-color: rgba(255, 255, 255, 0.4);
    background: rgba(8, 11, 20, 0.85);
+   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .hero-carousel__dots {
    display: inline-flex;
    align-items: center;
    gap: 10px;
+   position: relative;
+   z-index: 10;
 }
 
 .hero-carousel__dot {
@@ -237,6 +248,9 @@ main.container {
    cursor: pointer;
    padding: 0;
    transition: transform 180ms ease, background 180ms ease;
+   position: relative;
+   z-index: 10;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .hero-carousel__dot.is-active {
