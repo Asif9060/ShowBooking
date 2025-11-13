@@ -178,6 +178,7 @@
          upcoming: [],
          carousel: [],
          media: [],
+         bookings: [],
          users: [],
       },
       editing: {
@@ -381,6 +382,7 @@
       dom.adminConfigForm = $("#adminConfigForm");
       dom.adminConfigMessage = $("#adminConfigMessage");
       dom.adminConfigReset = $("#adminConfigReset");
+      dom.adminBookingsTable = $("#adminBookingsTable tbody");
       dom.adminUsersTable = $("#adminUsersTable tbody");
    }
 
@@ -454,6 +456,7 @@
       dom.adminCarouselTable?.addEventListener("click", handleCarouselTableActions);
       dom.adminUpcomingTable?.addEventListener("click", handleUpcomingTableActions);
       dom.adminMediaTable?.addEventListener("click", handleMediaTableActions);
+      dom.adminBookingsTable?.addEventListener("click", handleBookingsTableActions);
       dom.adminUsersTable?.addEventListener("click", handleUsersTableActions);
 
       window.addEventListener("storage", handleStorageChange);
@@ -2053,13 +2056,13 @@
             await safeFetch(`/bookings/${bookingId}`, { method: "DELETE" });
             localSeatCache.delete(`${booking.movieId}::${booking.showtime}`);
             await loadUserBookings();
-            
+
             // Show success toast
-            showToast('Booking cancelled successfully!', 'success');
+            showToast("Booking cancelled successfully!", "success");
             return;
          } catch (error) {
             console.error("Remote cancellation failed, attempting local removal.", error);
-            showToast('Remote cancellation failed, cancelling locally...', 'warning');
+            showToast("Remote cancellation failed, cancelling locally...", "warning");
          }
       }
 
@@ -2067,9 +2070,9 @@
       localSeatCache.delete(`${booking.movieId}::${booking.showtime}`);
       state.userBookings = loadLocalBookings();
       renderBookings();
-      
+
       // Show success toast for local cancellation
-      showToast('Booking cancelled locally!', 'success');
+      showToast("Booking cancelled locally!", "success");
    }
 
    function removeLocalBooking(bookingId) {
@@ -2084,11 +2087,12 @@
    async function loadAdminResources() {
       if (!state.isAdmin) return;
       try {
-         const [movies, upcoming, carousel, media, users, config] = await Promise.all([
+         const [movies, upcoming, carousel, media, bookings, users, config] = await Promise.all([
             safeFetch("/admin/movies").catch(() => state.movies),
             safeFetch("/admin/upcoming").catch(() => state.upcoming),
             safeFetch("/admin/carousel").catch(() => state.carousel),
             safeFetch("/admin/media").catch(() => []),
+            safeFetch("/admin/bookings").catch(() => []),
             safeFetch("/admin/users").catch(() => []),
             safeFetch("/admin/config").catch(() => state.config),
          ]);
@@ -2097,6 +2101,7 @@
          state.admin.upcoming = Array.isArray(upcoming) ? upcoming : [];
          state.admin.carousel = Array.isArray(carousel) ? carousel : [];
          state.admin.media = Array.isArray(media) ? media : [];
+         state.admin.bookings = Array.isArray(bookings) ? bookings : [];
          state.admin.users = Array.isArray(users) ? users : [];
          if (config) {
             state.config = config;
@@ -2115,6 +2120,7 @@
       renderAdminCarouselTable();
       renderAdminUpcomingTable();
       renderAdminMediaTable();
+      renderAdminBookingsTable();
       renderAdminUsersTable();
    }
 
@@ -2762,6 +2768,66 @@
 
          // Show error toast
          showToast(errorMsg, "error");
+      }
+   }
+
+   function renderAdminBookingsTable() {
+      if (!dom.adminBookingsTable) return;
+      dom.adminBookingsTable.innerHTML = "";
+      const bookings = state.admin.bookings || [];
+      if (!bookings.length) {
+         dom.adminBookingsTable.innerHTML = `<tr><td colspan="9">No bookings found.</td></tr>`;
+         return;
+      }
+      bookings.forEach((booking) => {
+         const row = document.createElement("tr");
+         const userEmail = booking.user?.email || "Unknown User";
+         const movieTitle = booking.movie?.title || booking.movieTitle || "—";
+         const seats = booking.seatCodes?.join(", ") || booking.seats?.map(s => s.seat).join(", ") || "—";
+         const totalPrice = formatCurrency(booking.totalPrice || 0);
+         const paymentMethod = booking.payment?.method || "—";
+         const paymentStatus = booking.payment?.status || "pending";
+         const bookingStatus = booking.status || "confirmed";
+         const bookedDate = formatDateTime(booking.createdAt);
+         
+         row.innerHTML = `
+            <td>${userEmail}</td>
+            <td>${movieTitle}</td>
+            <td>${booking.showtime || "—"}</td>
+            <td>${seats}</td>
+            <td>${totalPrice}</td>
+            <td>${paymentMethod} (${paymentStatus})</td>
+            <td><span class="badge ${bookingStatus === 'confirmed' ? 'badge-success' : 'badge-warning'}">${bookingStatus}</span></td>
+            <td>${bookedDate}</td>
+            <td>
+               <button type="button" class="btn btn-ghost btn-sm btn-danger admin-delete-booking" data-id="${booking._id || booking.id}">Delete</button>
+            </td>
+         `;
+         dom.adminBookingsTable.appendChild(row);
+      });
+   }
+
+   function handleBookingsTableActions(event) {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.classList.contains("admin-delete-booking")) {
+         const bookingId = target.dataset.id;
+         if (!bookingId) return;
+         deleteAdminBooking(bookingId);
+      }
+   }
+
+   async function deleteAdminBooking(bookingId) {
+      if (!confirm("Are you sure you want to delete this booking?")) return;
+      try {
+         await safeFetch(`/admin/bookings/${bookingId}`, {
+            method: "DELETE",
+         });
+         showToast("Booking deleted successfully", "success");
+         await loadAdminResources();
+      } catch (error) {
+         console.error("Failed to delete booking", error);
+         showToast("Failed to delete booking", "error");
       }
    }
 

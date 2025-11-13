@@ -1045,6 +1045,21 @@ main.container {
    transform: translateY(-1px);
    box-shadow: 0 12px 24px rgba(124, 92, 255, 0.25);
 }
+.badge-success {
+   background: rgba(34, 197, 94, 0.15);
+   border-color: rgba(34, 197, 94, 0.3);
+   color: #4ade80;
+}
+.badge-warning {
+   background: rgba(251, 191, 36, 0.15);
+   border-color: rgba(251, 191, 36, 0.3);
+   color: #fbbf24;
+}
+.badge-danger {
+   background: rgba(239, 68, 68, 0.15);
+   border-color: rgba(239, 68, 68, 0.3);
+   color: #f87171;
+}
 .footer-links nav {
    display: flex;
    flex-direction: column;

@@ -170,6 +170,9 @@
                      <button type="button" class="admin-tab" data-admin-tab="upcoming">
                         Upcoming
                      </button>
+                     <button type="button" class="admin-tab" data-admin-tab="bookings">
+                        Bookings
+                     </button>
                      <button type="button" class="admin-tab" data-admin-tab="media">
                         Media
                      </button>
@@ -466,6 +469,35 @@
                                     <th>Release</th>
                                     <th>Status</th>
                                     <th>Updated</th>
+                                    <th>Actions</th>
+                                 </tr>
+                              </thead>
+                              <tbody></tbody>
+                           </table>
+                        </div>
+                     </section>
+
+                     <section
+                        class="admin-panel-section hidden"
+                        data-admin-panel="bookings">
+                        <header class="admin-panel-header">
+                           <h3>Manage Bookings</h3>
+                           <p>
+                              View and manage all user bookings across all movies and showtimes.
+                           </p>
+                        </header>
+                        <div class="admin-table-wrap">
+                           <table id="adminBookingsTable">
+                              <thead>
+                                 <tr>
+                                    <th>User</th>
+                                    <th>Movie</th>
+                                    <th>Showtime</th>
+                                    <th>Seats</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Booked</th>
                                     <th>Actions</th>
                                  </tr>
                               </thead>
