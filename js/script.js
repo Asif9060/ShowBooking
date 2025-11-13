@@ -1844,7 +1844,7 @@
                            <div class="payment-grid">
                               <div class="payment-info-box">
                                  <strong>Send Money To:</strong>
-                                 <p class="bkash-merchant-number">01970174297</p>
+                                 <p class="bkash-merchant-number">01400874851</p>
                                  <small class="payment-help">Send the exact amount to this bKash number, then enter your details below.</small>
                               </div>
                               <label>
@@ -1859,7 +1859,7 @@
                                  <strong>Steps:</strong><br>
                                  1. Send <strong>${formatCurrency(
                                     total
-                                 )}</strong> to <strong>01970174297</strong> via bKash<br>
+                                 )}</strong> to <strong>01400874851</strong> via bKash<br>
                                  2. Enter your bKash number and transaction ID above<br>
                                  3. Click "Pay Now" for manual verification
                               </div>
