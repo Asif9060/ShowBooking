@@ -13,7 +13,7 @@
          title: "Starline Odyssey",
          runtime: "2h 12m",
          rating: "PG-13",
-         price: 9.5,
+         price: 1050,
          showtimes: ["10:30", "13:00", "16:15", "19:40"],
          synopsis:
             "An epic journey across galaxies where a crew must choose between duty and destiny.",
@@ -31,7 +31,7 @@
          title: "Silent Grove",
          runtime: "1h 44m",
          rating: "R",
-         price: 8.0,
+         price: 880,
          showtimes: ["11:00", "14:30", "18:00", "21:30"],
          synopsis:
             "A hauntingly beautiful tale of a town that keeps its darkest secrets buried.",
@@ -49,7 +49,7 @@
          title: "The Last Recipe",
          runtime: "1h 58m",
          rating: "PG",
-         price: 7.5,
+         price: 825,
          showtimes: ["09:50", "12:20", "15:50", "20:00"],
          synopsis:
             "A chef races to reclaim his legacy in a world where flavor can change fate.",
@@ -67,7 +67,7 @@
          title: "Neon Drift",
          runtime: "2h 03m",
          rating: "PG-13",
-         price: 10.0,
+         price: 1100,
          showtimes: ["12:00", "15:30", "18:45", "22:00"],
          synopsis:
             "High-speed street racers take on a futuristic metropolis in a pulse-pounding ride.",
@@ -3073,12 +3073,14 @@
    function formatCurrency(value) {
       if (typeof value !== "number" || Number.isNaN(value)) return "";
       try {
-         return new Intl.NumberFormat("en", {
+         return new Intl.NumberFormat("en-BD", {
             style: "currency",
-            currency: "USD",
+            currency: "BDT",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
          }).format(value);
       } catch {
-         return `$${value.toFixed(2)}`;
+         return `৳${value.toFixed(0)}`;
       }
    }
 
