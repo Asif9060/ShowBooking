@@ -1723,7 +1723,7 @@
          root.classList.add("ticket-card");
          root.innerHTML = `
             <div class="ticket-visual">
-               <div class="ticket-thumb" aria-hidden="true"></div>
+               <div class="ticket-label" aria-hidden="true">TICKET</div>
                <div class="ticket-paid-stamp" aria-hidden="true">PAID</div>
             </div>
             <div class="ticket-body">
@@ -1798,7 +1798,9 @@
                      Your digital pass is linked to your account. Present it upon arrival.
                   </div>
                   <div class="ticket-actions">
-                     <button class="btn btn-primary btn-sm view-ticket">View Ticket</button>
+                     <button class="btn btn-secondary btn-sm download-ticket">
+                        Download Ticket
+                     </button>
                      <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
                         Cancel
                      </button>
@@ -1808,7 +1810,6 @@
          `;
       }
 
-      const thumb = root.querySelector(".ticket-thumb");
       const cancelBtn = root.querySelector(".cancel-ticket");
       const statusChip = root.querySelector(".ticket-status-chip");
       const paidStamp = root.querySelector(".ticket-paid-stamp");
@@ -1848,14 +1849,7 @@
          state.user?.email ||
          "Guest";
 
-      const bookingIdentifier =
-         booking.ticketCode ||
-         booking.confirmationCode ||
-         booking.bookingCode ||
-         booking.reference ||
-         booking.bookingNumber ||
-         booking.id ||
-         booking._id;
+      const bookingIdentifier = deriveBookingIdentifier(booking);
       const ticketCodeValue = bookingIdentifier
          ? `#${String(bookingIdentifier).slice(-8).toUpperCase()}`
          : "—";
@@ -1867,15 +1861,6 @@
             ? `${seatCodes[0]} +${seatCodes.length - 1}`
             : seatCodes[0]
          : "—";
-
-      if (thumb) {
-         if (booking.posterUrl) {
-            thumb.style.backgroundImage = `url(${booking.posterUrl})`;
-         } else {
-            const colors = booking.posterColor || ["#3a7bd5", "#00d2ff"];
-            thumb.style.backgroundImage = `linear-gradient(180deg, ${colors[0]}, ${colors[1]})`;
-         }
-      }
 
       setTextContent(".ticket-title", booking.movieTitle || booking.title || "Untitled");
       setTextContent(".ticket-attendee", attendeeName);
@@ -1932,17 +1917,17 @@
 
       if (actionsContainer) {
          if (context === "list") {
-            let viewBtn = actionsContainer.querySelector(".view-ticket");
-            if (!viewBtn) {
-               viewBtn = document.createElement("button");
-               viewBtn.type = "button";
-               viewBtn.className = "btn btn-primary btn-sm view-ticket";
-               viewBtn.textContent = "View Ticket";
-               actionsContainer.prepend(viewBtn);
+            let downloadBtn = actionsContainer.querySelector(".download-ticket");
+            if (!downloadBtn) {
+               downloadBtn = document.createElement("button");
+               downloadBtn.type = "button";
+               downloadBtn.className = "btn btn-secondary btn-sm download-ticket";
+               downloadBtn.textContent = "Download Ticket";
+               actionsContainer.prepend(downloadBtn);
             }
-            viewBtn.disabled = false;
-            viewBtn.textContent = "View Ticket";
-            viewBtn.onclick = () => openTicketPreviewModal(booking);
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = "Download Ticket";
+            downloadBtn.onclick = () => showTicketDownloadOptions(root, booking);
 
             const existingPayBtn = actionsContainer.querySelector(".pay-now");
             if (existingPayBtn) existingPayBtn.remove();
@@ -1978,34 +1963,259 @@
       }
    }
 
-   function openTicketPreviewModal(booking) {
-      if (!booking) return;
+   function deriveBookingIdentifier(booking) {
+      if (!booking || typeof booking !== "object") return "";
+      const candidates = [
+         booking.reference,
+         booking.referenceId,
+         booking.bookingReference,
+         booking.bookingRef,
+         booking.bookingId,
+         booking.ticketId,
+         booking.reservationId,
+         booking.id,
+         booking._id,
+         booking.uid,
+         booking.payment?.receipt,
+         booking.payment?.id,
+         booking.payment?.paymentId,
+         booking.paymentId,
+         booking.razorpayPaymentId,
+         booking.razorpay_payment_id,
+      ];
+      const directMatch = candidates.find((value) =>
+         value !== undefined && value !== null && (typeof value === "string" || typeof value === "number")
+      );
+      if (directMatch !== undefined && directMatch !== null) return directMatch;
 
-      const container = document.createElement("div");
-      container.className = "ticket-preview-modal";
-      container.innerHTML = `
-         <header class="modal-header">
-            <h2>Ticket Preview</h2>
-            <p class="muted">Show this ticket at the venue entrance.</p>
-         </header>
-      `;
-
-      const cardWrapper = document.createElement("div");
-      cardWrapper.className = "ticket-preview-card";
-
-      if (dom.ticketTemplate?.content) {
-         const clone = document.importNode(dom.ticketTemplate.content, true);
-         populateTicketCard(clone, booking, { context: "preview" });
-         cardWrapper.appendChild(clone);
-      } else {
-         const fallbackCard = document.createElement("div");
-         fallbackCard.className = "ticket-card";
-         populateTicketCard(fallbackCard, booking, { context: "preview" });
-         cardWrapper.appendChild(fallbackCard);
+      if (Array.isArray(booking.seats)) {
+         const seatMatch = booking.seats.find((seat) =>
+            seat && (seat.ticketId || seat.bookingId || seat.reference)
+         );
+         if (seatMatch) return seatMatch.ticketId || seatMatch.bookingId || seatMatch.reference;
       }
 
-      container.appendChild(cardWrapper);
-      openModal(container);
+      const fallbackDate =
+         booking.createdAt || booking.created_at || booking.updatedAt || booking.date || booking.showtime;
+      if (fallbackDate) {
+         const timestamp = new Date(fallbackDate).getTime();
+         if (Number.isFinite(timestamp)) return timestamp;
+      }
+
+      return "";
+   }
+
+   function buildTicketFileName(booking, extension = "pdf") {
+      const safeSegment = (value, fallback) => {
+         if (value === undefined || value === null) return fallback;
+         const normalized = String(value)
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-_]/gi, "")
+            .toLowerCase();
+         return normalized || fallback;
+      };
+
+      const parts = [];
+      const movieTitle =
+         booking?.movieTitle || booking?.title || booking?.movie?.title || booking?.filmTitle || "ticket";
+      parts.push(safeSegment(movieTitle, "ticket"));
+
+      const showtimeValue = booking?.showtime || booking?.sessionTime || booking?.date;
+      if (showtimeValue) {
+         const parsed = new Date(showtimeValue);
+         if (Number.isFinite(parsed.getTime())) {
+            const stamp = `${parsed.getFullYear()}${String(parsed.getMonth() + 1).padStart(2, "0")}${String(
+               parsed.getDate()
+            ).padStart(2, "0")}`;
+            parts.push(stamp);
+         }
+      }
+
+      const identifier = deriveBookingIdentifier(booking);
+      if (identifier) {
+         parts.push(
+            safeSegment(String(identifier).slice(-12), "ref")
+         );
+      }
+
+      const base = parts.filter(Boolean).join("_") || "ticket";
+      const sanitizedExtension = safeSegment(extension, "pdf");
+      return `${base}.${sanitizedExtension || "pdf"}`;
+   }
+
+   async function showTicketDownloadOptions(ticketRoot, booking) {
+      if (!ticketRoot || !booking) return;
+      if (typeof window.html2canvas !== "function") {
+         showToast("Download is not ready yet. Please try again once assets finish loading.", "warning");
+         return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "ticket-download-modal";
+      const titleText = booking.movieTitle || booking.title || "Your Ticket";
+
+      modal.innerHTML = `
+         <header class="modal-header">
+            <h2>Download Ticket</h2>
+            <p class="muted">${escapeHtml(titleText)}</p>
+         </header>
+         <div class="modal-body">
+            <p class="modal-note">Choose a format to save your ticket.</p>
+            <div class="download-option-group">
+               <button type="button" class="btn btn-primary download-option" data-format="pdf">Download as PDF</button>
+               <button type="button" class="btn btn-secondary download-option" data-format="image">Download as Image</button>
+            </div>
+         </div>
+         <footer class="modal-footer">
+            <button type="button" class="btn btn-ghost modal-cancel">Close</button>
+         </footer>
+      `;
+
+      openModal(modal);
+
+      const cancelBtn = modal.querySelector(".modal-cancel");
+      cancelBtn?.addEventListener("click", closeModal);
+
+      const optionButtons = Array.from(modal.querySelectorAll(".download-option"));
+      const defaultLabels = new Map(optionButtons.map((btn) => [btn, btn.textContent]));
+
+      optionButtons.forEach((btn) => {
+         btn.addEventListener("click", async () => {
+            const format = btn.dataset.format === "image" ? "image" : "pdf";
+            optionButtons.forEach((button) => {
+               button.disabled = true;
+               button.textContent = "Preparing...";
+            });
+
+            const success = await handleTicketDownload(ticketRoot, booking, format);
+
+            optionButtons.forEach((button) => {
+               const originalText = defaultLabels.get(button) || "Download";
+               button.textContent = originalText;
+               button.disabled = false;
+            });
+
+            if (success) closeModal();
+         });
+      });
+   }
+
+   async function handleTicketDownload(ticketRoot, booking, format = "pdf") {
+      if (!ticketRoot) return false;
+
+      const html2canvasFn = window.html2canvas;
+      if (typeof html2canvasFn !== "function") {
+         showToast("Ticket export is unavailable right now.", "error");
+         return false;
+      }
+
+      const exportFormat = format === "image" ? "image" : "pdf";
+      if (exportFormat === "pdf") {
+         const jspdfNamespace = window.jspdf || window.jsPDF;
+         const JsPDFConstructor = (jspdfNamespace && jspdfNamespace.jsPDF) || jspdfNamespace;
+         if (typeof JsPDFConstructor !== "function") {
+            showToast("PDF export is unavailable right now.", "error");
+            return false;
+         }
+      }
+
+      let sandbox;
+      try {
+         // Clone the ticket card into an off-screen container so html2canvas sees a stable layout.
+         sandbox = document.createElement("div");
+         sandbox.className = "ticket-export-sandbox";
+         sandbox.style.position = "fixed";
+         sandbox.style.left = "-200vw";
+         sandbox.style.top = "0";
+         sandbox.style.pointerEvents = "none";
+         sandbox.style.opacity = "0";
+         sandbox.style.zIndex = "-1";
+
+         const clone = ticketRoot.cloneNode(true);
+         clone.classList.add("ticket-download-clone");
+         const originalRect = ticketRoot.getBoundingClientRect();
+         const targetWidth = Math.ceil(originalRect.width || ticketRoot.offsetWidth || 0);
+         clone.style.maxWidth = targetWidth ? `${targetWidth}px` : "";
+         clone.style.width = targetWidth ? `${targetWidth}px` : "auto";
+         clone.style.margin = "0";
+         clone.style.boxShadow = "none";
+
+         // Strip interactive controls from the exported copy.
+         const actionArea = clone.querySelector(".ticket-actions");
+         actionArea?.remove();
+
+         sandbox.appendChild(clone);
+         document.body.appendChild(sandbox);
+
+         if (document.fonts?.ready) {
+            try {
+               await document.fonts.ready;
+            } catch {
+               // Ignore font loading issues and continue with export.
+            }
+         }
+
+         await new Promise((resolve) => requestAnimationFrame(resolve));
+
+         const cloneRect = clone.getBoundingClientRect();
+         const width = Math.ceil(cloneRect.width || originalRect.width || 0);
+         const height = Math.ceil(cloneRect.height || originalRect.height || 0);
+
+         if (!width || !height) {
+            showToast("Ticket size is not ready for download. Please try again.", "warning");
+            return false;
+         }
+
+         const backgroundStyle = window.getComputedStyle(ticketRoot).backgroundColor;
+         const backgroundColor =
+            backgroundStyle && backgroundStyle !== "rgba(0, 0, 0, 0)" ? backgroundStyle : "#ffffff";
+
+         const scale = Math.min(Math.max(window.devicePixelRatio || 1.5, 1.5), 2);
+
+         const canvas = await html2canvasFn(clone, {
+            backgroundColor,
+            scale,
+            useCORS: true,
+            width,
+            height,
+         });
+
+         const extension = exportFormat === "pdf" ? "pdf" : "png";
+         const filename = buildTicketFileName(booking, extension);
+
+         if (exportFormat === "pdf") {
+            const jspdfNamespace = window.jspdf || window.jsPDF;
+            const JsPDFConstructor = (jspdfNamespace && jspdfNamespace.jsPDF) || jspdfNamespace;
+            if (typeof JsPDFConstructor !== "function") {
+               showToast("PDF export is unavailable right now.", "error");
+               return false;
+            }
+            const orientation = width >= height ? "landscape" : "portrait";
+            const pdf = new JsPDFConstructor({ orientation, unit: "px", format: [width, height] });
+            pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, width, height);
+            pdf.save(filename);
+            showToast("Ticket downloaded as PDF.", "success");
+         } else {
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png", 0.98);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Ticket downloaded as image.", "success");
+         }
+
+         return true;
+      } catch (error) {
+         console.error("Ticket download failed:", error);
+         showToast("Unable to download ticket. Please try again.", "error");
+         return false;
+      } finally {
+         if (sandbox?.parentNode) {
+            sandbox.parentNode.removeChild(sandbox);
+         }
+      }
    }
 
    function openBookingPaymentModal(booking) {

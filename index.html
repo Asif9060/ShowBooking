@@ -720,7 +720,7 @@
       <template id="ticketTemplate">
          <article class="ticket-card">
             <div class="ticket-visual">
-               <div class="ticket-thumb" aria-hidden="true"></div>
+               <div class="ticket-label" aria-hidden="true">TICKET</div>
                <div class="ticket-paid-stamp" aria-hidden="true">PAID</div>
             </div>
             <div class="ticket-body">
@@ -797,7 +797,9 @@
                      Your digital pass is linked to your account. Present it upon arrival.
                   </div>
                   <div class="ticket-actions">
-                     <button class="btn btn-primary btn-sm view-ticket">View Ticket</button>
+                     <button class="btn btn-secondary btn-sm download-ticket">
+                        Download Ticket
+                     </button>
                      <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
                         Cancel
                      </button>
@@ -892,6 +894,8 @@
          }
          console.log("[Config] API Base URL:", window.__APP_CONFIG__.apiBaseUrl);
       </script>
+      <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
       <script src="js/script.js"></script>
    </body>
 </html>
