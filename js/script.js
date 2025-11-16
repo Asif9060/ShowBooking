@@ -1703,18 +1703,19 @@
       state.userBookings.forEach((booking) => {
          if (template) {
             const clone = document.importNode(template, true);
-            populateTicketCard(clone, booking);
+            populateTicketCard(clone, booking, { context: "list" });
             dom.bookingsContainer.appendChild(clone);
          } else {
             const fallbackCard = document.createElement("div");
             fallbackCard.className = "ticket-card";
-            populateTicketCard(fallbackCard, booking);
+            populateTicketCard(fallbackCard, booking, { context: "list" });
             dom.bookingsContainer.appendChild(fallbackCard);
          }
       });
    }
 
-   function populateTicketCard(fragment, booking) {
+   function populateTicketCard(fragment, booking, options = {}) {
+      const context = options.context || "list";
       const card = fragment.querySelector ? fragment.querySelector(".ticket-card") : null;
       const root = card || fragment;
 
@@ -1730,40 +1731,74 @@
                   <div class="ticket-heading">
                      <span class="ticket-brand">Movie &amp; Show Booking</span>
                      <h4 class="ticket-title"></h4>
+                     <p class="ticket-tagline">Premium Entry Pass</p>
                   </div>
                   <span class="ticket-status-chip chip-awaiting" data-status="pending">Awaiting Payment</span>
                </header>
-               <div class="ticket-details-grid">
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Attendee</span>
-                     <span class="ticket-detail-value ticket-attendee"></span>
+               <div class="ticket-body-content">
+                  <div class="ticket-details">
+                     <div class="ticket-details-grid">
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Attendee</span>
+                           <span class="ticket-detail-value ticket-attendee"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Showtime</span>
+                           <span class="ticket-detail-value ticket-showtime"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Seats</span>
+                           <span class="ticket-detail-value ticket-seats"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Total</span>
+                           <span class="ticket-detail-value ticket-total"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Booking ID</span>
+                           <span class="ticket-detail-value ticket-code"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Booked On</span>
+                           <span class="ticket-detail-value ticket-booked-date"></span>
+                        </div>
+                     </div>
+                     <div class="ticket-meta-note">
+                        Keep this ticket handy for entry. ID verification may be required.
+                     </div>
                   </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Showtime</span>
-                     <span class="ticket-detail-value ticket-showtime"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Seats</span>
-                     <span class="ticket-detail-value ticket-seats"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Total</span>
-                     <span class="ticket-detail-value ticket-total"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Booking ID</span>
-                     <span class="ticket-detail-value ticket-code"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Booked On</span>
-                     <span class="ticket-detail-value ticket-booked-date"></span>
-                  </div>
+                  <aside class="ticket-stub" aria-label="Ticket stub">
+                     <div class="ticket-stub-inner">
+                        <span class="ticket-stub-title">Admit One</span>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Showtime</span>
+                           <span class="stub-value ticket-showtime"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Seat</span>
+                           <span class="stub-value ticket-seat-badge"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Total</span>
+                           <span class="stub-value ticket-total"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Booked</span>
+                           <span class="stub-value ticket-booked-date"></span>
+                        </div>
+                        <div class="ticket-stub-barcode" aria-hidden="true">
+                           <div class="barcode-lines"></div>
+                           <span class="barcode-code ticket-code"></span>
+                        </div>
+                     </div>
+                  </aside>
                </div>
                <footer class="ticket-footer">
                   <div class="ticket-disclaimer">
-                     Keep this ticket handy for entry. ID verification may be required.
+                     Your digital pass is linked to your account. Present it upon arrival.
                   </div>
                   <div class="ticket-actions">
+                     <button class="btn btn-primary btn-sm view-ticket">View Ticket</button>
                      <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
                         Cancel
                      </button>
@@ -1773,18 +1808,18 @@
          `;
       }
 
-      const title = root.querySelector(".ticket-title");
-      const attendeeEl = root.querySelector(".ticket-attendee");
-      const showtimeEl = root.querySelector(".ticket-showtime");
-      const seatsEl = root.querySelector(".ticket-seats");
-      const totalEl = root.querySelector(".ticket-total");
-      const codeEl = root.querySelector(".ticket-code");
-      const bookedDateEl = root.querySelector(".ticket-booked-date");
       const thumb = root.querySelector(".ticket-thumb");
       const cancelBtn = root.querySelector(".cancel-ticket");
       const statusChip = root.querySelector(".ticket-status-chip");
       const paidStamp = root.querySelector(".ticket-paid-stamp");
       const actionsContainer = root.querySelector(".ticket-actions") || root;
+
+      const setTextContent = (selector, value) => {
+         const nodes = root.querySelectorAll(selector);
+         nodes.forEach((node) => {
+            if (node) node.textContent = value;
+         });
+      };
 
       const seats = Array.isArray(booking.seats)
          ? booking.seats
@@ -1827,6 +1862,11 @@
       const seatsDisplay = seatCodes.length ? seatCodes.join(", ") : "—";
       const totalDisplay = typeof price === "number" ? formatCurrency(price) : "";
       const bookedDisplay = createdAt ? formatDateTime(createdAt) : "";
+      const primarySeat = seatCodes.length
+         ? seatCodes.length > 1
+            ? `${seatCodes[0]} +${seatCodes.length - 1}`
+            : seatCodes[0]
+         : "—";
 
       if (thumb) {
          if (booking.posterUrl) {
@@ -1837,15 +1877,14 @@
          }
       }
 
-      if (title) {
-         title.textContent = booking.movieTitle || booking.title || "Untitled";
-      }
-      if (attendeeEl) attendeeEl.textContent = attendeeName;
-      if (showtimeEl) showtimeEl.textContent = showtime || "—";
-      if (seatsEl) seatsEl.textContent = seatsDisplay;
-      if (totalEl) totalEl.textContent = totalDisplay || "—";
-      if (codeEl) codeEl.textContent = ticketCodeValue;
-      if (bookedDateEl) bookedDateEl.textContent = bookedDisplay || "—";
+      setTextContent(".ticket-title", booking.movieTitle || booking.title || "Untitled");
+      setTextContent(".ticket-attendee", attendeeName);
+      setTextContent(".ticket-showtime", showtime || "—");
+      setTextContent(".ticket-seats", seatsDisplay);
+      setTextContent(".ticket-total", totalDisplay || "—");
+      setTextContent(".ticket-code", ticketCodeValue);
+      setTextContent(".ticket-booked-date", bookedDisplay || "—");
+      setTextContent(".ticket-seat-badge", primarySeat);
 
       root.classList.remove("ticket-paid", "ticket-pending", "ticket-awaiting", "ticket-cancelled");
       let cardStatusClass = "ticket-awaiting";
@@ -1882,41 +1921,91 @@
       }
 
       if (cancelBtn) {
-         cancelBtn.disabled = bookingStatusRaw === "cancelled";
-         cancelBtn.textContent = bookingStatusRaw === "cancelled" ? "Cancelled" : "Cancel";
-         cancelBtn.addEventListener("click", () => cancelBooking(booking));
+         if (context === "list") {
+            cancelBtn.disabled = bookingStatusRaw === "cancelled";
+            cancelBtn.textContent = bookingStatusRaw === "cancelled" ? "Cancelled" : "Cancel";
+            cancelBtn.onclick = () => cancelBooking(booking);
+         } else {
+            cancelBtn.remove();
+         }
       }
 
       if (actionsContainer) {
-         const existingPayBtn = actionsContainer.querySelector(".pay-now");
-         if (existingPayBtn) existingPayBtn.remove();
-
-         if (bookingStatusRaw !== "cancelled") {
-            const payBtn = document.createElement("button");
-            payBtn.type = "button";
-            payBtn.className = "btn btn-secondary pay-now";
-
-            if (paymentStatusRaw === "captured") {
-               payBtn.textContent = "Paid";
-               payBtn.disabled = true;
-               payBtn.classList.add("paid");
-            } else if (paymentStatusRaw === "authorized") {
-               payBtn.textContent = "Pending";
-               payBtn.disabled = true;
-               payBtn.classList.add("pending");
-            } else {
-               payBtn.textContent = "Pay Now";
-               payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
+         if (context === "list") {
+            let viewBtn = actionsContainer.querySelector(".view-ticket");
+            if (!viewBtn) {
+               viewBtn = document.createElement("button");
+               viewBtn.type = "button";
+               viewBtn.className = "btn btn-primary btn-sm view-ticket";
+               viewBtn.textContent = "View Ticket";
+               actionsContainer.prepend(viewBtn);
             }
+            viewBtn.disabled = false;
+            viewBtn.textContent = "View Ticket";
+            viewBtn.onclick = () => openTicketPreviewModal(booking);
 
-            const cancelAction = actionsContainer.querySelector(".cancel-ticket");
-            if (cancelAction) {
-               actionsContainer.insertBefore(payBtn, cancelAction);
-            } else {
-               actionsContainer.appendChild(payBtn);
+            const existingPayBtn = actionsContainer.querySelector(".pay-now");
+            if (existingPayBtn) existingPayBtn.remove();
+
+            if (bookingStatusRaw !== "cancelled") {
+               const payBtn = document.createElement("button");
+               payBtn.type = "button";
+               payBtn.className = "btn btn-secondary pay-now";
+
+               if (paymentStatusRaw === "captured") {
+                  payBtn.textContent = "Paid";
+                  payBtn.disabled = true;
+                  payBtn.classList.add("paid");
+               } else if (paymentStatusRaw === "authorized") {
+                  payBtn.textContent = "Pending";
+                  payBtn.disabled = true;
+                  payBtn.classList.add("pending");
+               } else {
+                  payBtn.textContent = "Pay Now";
+                  payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
+               }
+
+               const cancelAction = actionsContainer.querySelector(".cancel-ticket");
+               if (cancelAction) {
+                  actionsContainer.insertBefore(payBtn, cancelAction);
+               } else {
+                  actionsContainer.appendChild(payBtn);
+               }
             }
+         } else {
+            actionsContainer.textContent = "";
          }
       }
+   }
+
+   function openTicketPreviewModal(booking) {
+      if (!booking) return;
+
+      const container = document.createElement("div");
+      container.className = "ticket-preview-modal";
+      container.innerHTML = `
+         <header class="modal-header">
+            <h2>Ticket Preview</h2>
+            <p class="muted">Show this ticket at the venue entrance.</p>
+         </header>
+      `;
+
+      const cardWrapper = document.createElement("div");
+      cardWrapper.className = "ticket-preview-card";
+
+      if (dom.ticketTemplate?.content) {
+         const clone = document.importNode(dom.ticketTemplate.content, true);
+         populateTicketCard(clone, booking, { context: "preview" });
+         cardWrapper.appendChild(clone);
+      } else {
+         const fallbackCard = document.createElement("div");
+         fallbackCard.className = "ticket-card";
+         populateTicketCard(fallbackCard, booking, { context: "preview" });
+         cardWrapper.appendChild(fallbackCard);
+      }
+
+      container.appendChild(cardWrapper);
+      openModal(container);
    }
 
    function openBookingPaymentModal(booking) {

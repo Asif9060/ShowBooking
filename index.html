@@ -728,42 +728,76 @@
                   <div class="ticket-heading">
                      <span class="ticket-brand">Movie &amp; Show Booking</span>
                      <h4 class="ticket-title"></h4>
+                     <p class="ticket-tagline">Premium Entry Pass</p>
                   </div>
                   <span class="ticket-status-chip chip-awaiting" data-status="pending">
                      Awaiting Payment
                   </span>
                </header>
-               <div class="ticket-details-grid">
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Attendee</span>
-                     <span class="ticket-detail-value ticket-attendee"></span>
+               <div class="ticket-body-content">
+                  <div class="ticket-details">
+                     <div class="ticket-details-grid">
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Attendee</span>
+                           <span class="ticket-detail-value ticket-attendee"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Showtime</span>
+                           <span class="ticket-detail-value ticket-showtime"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Seats</span>
+                           <span class="ticket-detail-value ticket-seats"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Total</span>
+                           <span class="ticket-detail-value ticket-total"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Booking ID</span>
+                           <span class="ticket-detail-value ticket-code"></span>
+                        </div>
+                        <div class="ticket-detail">
+                           <span class="ticket-detail-label">Booked On</span>
+                           <span class="ticket-detail-value ticket-booked-date"></span>
+                        </div>
+                     </div>
+                     <div class="ticket-meta-note">
+                        Keep this ticket handy for entry. ID verification may be required.
+                     </div>
                   </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Showtime</span>
-                     <span class="ticket-detail-value ticket-showtime"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Seats</span>
-                     <span class="ticket-detail-value ticket-seats"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Total</span>
-                     <span class="ticket-detail-value ticket-total"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Booking ID</span>
-                     <span class="ticket-detail-value ticket-code"></span>
-                  </div>
-                  <div class="ticket-detail">
-                     <span class="ticket-detail-label">Booked On</span>
-                     <span class="ticket-detail-value ticket-booked-date"></span>
-                  </div>
+                  <aside class="ticket-stub" aria-label="Ticket stub">
+                     <div class="ticket-stub-inner">
+                        <span class="ticket-stub-title">Admit One</span>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Showtime</span>
+                           <span class="stub-value ticket-showtime"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Seat</span>
+                           <span class="stub-value ticket-seat-badge"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Total</span>
+                           <span class="stub-value ticket-total"></span>
+                        </div>
+                        <div class="ticket-stub-detail">
+                           <span class="stub-label">Booked</span>
+                           <span class="stub-value ticket-booked-date"></span>
+                        </div>
+                        <div class="ticket-stub-barcode" aria-hidden="true">
+                           <div class="barcode-lines"></div>
+                           <span class="barcode-code ticket-code"></span>
+                        </div>
+                     </div>
+                  </aside>
                </div>
                <footer class="ticket-footer">
                   <div class="ticket-disclaimer">
-                     Keep this ticket handy for entry. ID verification may be required.
+                     Your digital pass is linked to your account. Present it upon arrival.
                   </div>
                   <div class="ticket-actions">
+                     <button class="btn btn-primary btn-sm view-ticket">View Ticket</button>
                      <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
                         Cancel
                      </button>
