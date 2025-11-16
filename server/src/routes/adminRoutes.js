@@ -34,6 +34,9 @@ import { getAdminConfig, updateConfig } from "../controllers/configController.js
 import {
    adminListBookings,
    adminDeleteBooking,
+   adminMarkBookingPaid,
+   adminCancelBooking,
+   adminUpdateBooking,
 } from "../controllers/bookingController.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
@@ -104,6 +107,24 @@ router.get("/config", requireAuth, requireAdmin, getAdminConfig);
 router.put("/config", requireAuth, requireAdmin, updateConfig);
 
 router.get("/bookings", requireAuth, requireAdmin, adminListBookings);
+router.post(
+   "/bookings/:bookingId/mark-paid",
+   requireAuth,
+   requireAdmin,
+   adminMarkBookingPaid
+);
+router.post(
+   "/bookings/:bookingId/cancel",
+   requireAuth,
+   requireAdmin,
+   adminCancelBooking
+);
+router.patch(
+   "/bookings/:bookingId",
+   requireAuth,
+   requireAdmin,
+   adminUpdateBooking
+);
 router.delete("/bookings/:bookingId", requireAuth, requireAdmin, adminDeleteBooking);
 
 export default router;

@@ -1770,15 +1770,19 @@
          const payBtn = document.createElement("button");
          payBtn.type = "button";
          payBtn.className = "btn btn-secondary pay-now";
-         const paymentStatus = booking?.payment?.status || "pending";
+         const paymentStatus = (booking?.payment?.status || "pending").toLowerCase();
          if (paymentStatus === "captured") {
             payBtn.textContent = "Paid";
             payBtn.disabled = true;
             payBtn.classList.add("paid");
+         } else if (paymentStatus === "authorized") {
+            payBtn.textContent = "Pending";
+            payBtn.disabled = true;
+            payBtn.classList.add("pending");
          } else {
             payBtn.textContent = "Pay Now";
+            payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
          }
-         payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
          actionsContainer.appendChild(payBtn);
       } catch (err) {
          // ignore UI attach errors
@@ -1993,13 +1997,13 @@
                method: "POST",
                body: JSON.stringify(payload),
             });
-            setPaymentMessage("Payment recorded successfully!", false);
+            setPaymentMessage("Payment submitted for review!", false);
             await loadUserBookings();
             renderBookings();
 
             // Show success toast
             showToast(
-               `Payment successful! Your booking for ${booking.movieTitle} is confirmed.`,
+               `Payment submitted! We'll verify your booking for ${booking.movieTitle} shortly.`,
                "success"
             );
 
@@ -2023,7 +2027,7 @@
                // Set payment status as captured for both card and bKash
                const paymentInfo = {
                   ...payload,
-                  status: "captured",
+                  status: "authorized",
                };
                localCopy.payment = paymentInfo;
 
@@ -2781,26 +2785,76 @@
       }
       bookings.forEach((booking) => {
          const row = document.createElement("tr");
-         const userEmail = booking.user?.email || "Unknown User";
-         const movieTitle = booking.movie?.title || booking.movieTitle || "—";
-         const seats = booking.seatCodes?.join(", ") || booking.seats?.map(s => s.seat).join(", ") || "—";
-         const totalPrice = formatCurrency(booking.totalPrice || 0);
-         const paymentMethod = booking.payment?.method || "—";
-         const paymentStatus = booking.payment?.status || "pending";
-         const bookingStatus = booking.status || "confirmed";
-         const bookedDate = formatDateTime(booking.createdAt);
-         
+             const bookingId = booking._id || booking.id;
+             const userEmail = escapeHtml(booking.user?.email || "Unknown User");
+             const movieTitle = escapeHtml(booking.movie?.title || booking.movieTitle || "—");
+         const seats =
+            booking.seatCodes?.join(", ") ||
+            (Array.isArray(booking.seats)
+               ? booking.seats
+                    .map((s) => (typeof s === "string" ? s : s?.seat))
+                    .filter(Boolean)
+                  .join(", ")
+               : "—");
+             const seatsDisplay = escapeHtml(seats || "—");
+            const totalPrice = escapeHtml(formatCurrency(booking.totalPrice || 0) || "");
+             const paymentMethod = escapeHtml(booking.payment?.method || "—");
+         const paymentStatusRaw = (booking.payment?.status || "pending").toLowerCase();
+         const bookingStatusRaw = (booking.status || "confirmed").toLowerCase();
+         const bookedDate = escapeHtml(formatDateTime(booking.createdAt) || "—");
+
+         const paymentStatusLabel =
+            paymentStatusRaw === "captured"
+               ? "Paid"
+               : paymentStatusRaw === "authorized"
+               ? "Pending"
+               : "Awaiting";
+         const paymentBadgeClass =
+            paymentStatusRaw === "captured"
+               ? "badge badge-success"
+               : paymentStatusRaw === "authorized"
+               ? "badge badge-warning"
+               : "badge";
+         const bookingBadgeClass =
+            bookingStatusRaw === "cancelled" ? "badge badge-danger" : "badge badge-success";
+         const bookingStatusLabel =
+            bookingStatusRaw === "cancelled" ? "Cancelled" : "Confirmed";
+         const paymentStatusDisplay = escapeHtml(paymentStatusLabel);
+         const bookingStatusDisplay = escapeHtml(bookingStatusLabel);
+
+         const isCancelled = bookingStatusRaw === "cancelled";
+         const isPaid = paymentStatusRaw === "captured";
+
+         const paidDisabled = isPaid || isCancelled;
+         const editDisabled = isCancelled;
+         const cancelDisabled = isCancelled;
+
          row.innerHTML = `
             <td>${userEmail}</td>
             <td>${movieTitle}</td>
-            <td>${booking.showtime || "—"}</td>
-            <td>${seats}</td>
+            <td>${escapeHtml(booking.showtime || "—")}</td>
+            <td>${seatsDisplay}</td>
             <td>${totalPrice}</td>
-            <td>${paymentMethod} (${paymentStatus})</td>
-            <td><span class="badge ${bookingStatus === 'confirmed' ? 'badge-success' : 'badge-warning'}">${bookingStatus}</span></td>
+            <td>
+               <div class="payment-status-display">
+                  <span class="payment-method">${paymentMethod}</span>
+                  <span class="${paymentBadgeClass}">${paymentStatusDisplay}</span>
+               </div>
+            </td>
+            <td><span class="${bookingBadgeClass}">${bookingStatusDisplay}</span></td>
             <td>${bookedDate}</td>
             <td>
-               <button type="button" class="btn btn-ghost btn-sm btn-danger admin-delete-booking" data-id="${booking._id || booking.id}">Delete</button>
+               <div class="admin-table-actions">
+                  <button type="button" class="btn btn-success btn-sm admin-mark-paid" data-id="${
+                     bookingId || ""
+                  }" ${paidDisabled ? "disabled" : ""}>Paid</button>
+                  <button type="button" class="btn btn-secondary btn-sm admin-edit-booking" data-id="${
+                     bookingId || ""
+                  }" ${editDisabled ? "disabled" : ""}>Edit</button>
+                  <button type="button" class="btn btn-ghost btn-sm btn-danger admin-cancel-booking" data-id="${
+                     bookingId || ""
+                  }" ${cancelDisabled ? "disabled" : ""}>Cancel</button>
+               </div>
             </td>
          `;
          dom.adminBookingsTable.appendChild(row);
@@ -2810,25 +2864,302 @@
    function handleBookingsTableActions(event) {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
+      const bookingId = target.dataset.id;
+      if (!bookingId) return;
+
+      if (target.classList.contains("admin-mark-paid")) {
+         markAdminBookingPaid(bookingId);
+         return;
+      }
+      if (target.classList.contains("admin-edit-booking")) {
+         const booking = (state.admin.bookings || []).find(
+            (item) => (item._id || item.id) === bookingId
+         );
+         if (booking) {
+            openAdminBookingEditModal(booking);
+         } else {
+            showToast("Unable to load booking details.", "error");
+         }
+         return;
+      }
+      if (target.classList.contains("admin-cancel-booking")) {
+         cancelAdminBooking(bookingId);
+         return;
+      }
       if (target.classList.contains("admin-delete-booking")) {
-         const bookingId = target.dataset.id;
-         if (!bookingId) return;
          deleteAdminBooking(bookingId);
       }
    }
 
+   async function markAdminBookingPaid(bookingId) {
+      try {
+         await safeFetch(`/admin/bookings/${bookingId}/mark-paid`, {
+            method: "POST",
+         });
+         showToast("Booking marked as paid.", "success");
+         await loadAdminResources();
+         if (state.view === "bookings") {
+            await loadUserBookings();
+            renderBookings();
+         }
+      } catch (error) {
+         console.error("Failed to mark booking as paid", error);
+         showToast("Failed to mark booking as paid", "error");
+      }
+   }
+
+   async function cancelAdminBooking(bookingId) {
+      if (!confirm("Cancel this booking?")) return;
+      try {
+         await safeFetch(`/admin/bookings/${bookingId}/cancel`, {
+            method: "POST",
+         });
+         showToast("Booking cancelled.", "success");
+         await loadAdminResources();
+         if (state.view === "bookings") {
+            await loadUserBookings();
+            renderBookings();
+         }
+      } catch (error) {
+         console.error("Failed to cancel booking", error);
+         showToast("Failed to cancel booking", "error");
+      }
+   }
+
    async function deleteAdminBooking(bookingId) {
-      if (!confirm("Are you sure you want to delete this booking?")) return;
+      if (!confirm("Delete this booking permanently?")) return;
       try {
          await safeFetch(`/admin/bookings/${bookingId}`, {
             method: "DELETE",
          });
-         showToast("Booking deleted successfully", "success");
+         showToast("Booking deleted successfully.", "success");
          await loadAdminResources();
+         if (state.view === "bookings") {
+            await loadUserBookings();
+            renderBookings();
+         }
       } catch (error) {
          console.error("Failed to delete booking", error);
          showToast("Failed to delete booking", "error");
       }
+   }
+
+   function openAdminBookingEditModal(booking) {
+      const bookingId = booking._id || booking.id;
+      const container = document.createElement("div");
+      container.className = "admin-booking-edit";
+
+      const showtimeValue = escapeHtml(booking.showtime || "");
+      const totalPriceValue = Number.isFinite(booking.totalPrice)
+         ? booking.totalPrice
+         : "";
+      const paymentMethod = booking.payment?.method || "card";
+      const paymentStatus = booking.payment?.status || "pending";
+      const paymentReference = escapeHtml(booking.payment?.reference || "");
+      const paymentTransactionId = escapeHtml(booking.payment?.transactionId || "");
+      const paymentBkashNumber = escapeHtml(booking.payment?.bkashNumber || "");
+      const paymentCardHolder = escapeHtml(booking.payment?.cardHolder || "");
+      const paymentCardLast4 = escapeHtml(booking.payment?.cardLast4 || "");
+      const statusValue = booking.status === "cancelled" ? "cancelled" : "confirmed";
+
+      container.innerHTML = `
+         <header class="modal-header">
+            <h2>Edit booking</h2>
+            <p class="muted">${escapeHtml(booking.movieTitle || booking.movie?.title || "Booking")}</p>
+         </header>
+         <form class="admin-form admin-booking-edit-form">
+            <div class="modal-body">
+               <div class="form-grid">
+                  <label>
+                     Showtime
+                     <input type="text" name="showtime" value="${showtimeValue}" placeholder="19:30" />
+                  </label>
+                  <label>
+                     Total Price (BDT)
+                     <input type="number" name="totalPrice" min="0" step="1" value="${totalPriceValue}" />
+                  </label>
+                  <label>
+                     Booking Status
+                     <select name="status">
+                        <option value="confirmed" ${statusValue === "confirmed" ? "selected" : ""}>Confirmed</option>
+                        <option value="cancelled" ${statusValue === "cancelled" ? "selected" : ""}>Cancelled</option>
+                     </select>
+                  </label>
+               </div>
+               <fieldset class="admin-payment-editor">
+                  <legend>Payment Details</legend>
+                  <div class="form-grid">
+                     <label>
+                        Method
+                        <select name="paymentMethod">
+                           <option value="card" ${paymentMethod === "card" ? "selected" : ""}>Card</option>
+                           <option value="bkash" ${paymentMethod === "bkash" ? "selected" : ""}>bKash</option>
+                        </select>
+                     </label>
+                     <label>
+                        Status
+                        <select name="paymentStatus">
+                           <option value="pending" ${paymentStatus === "pending" ? "selected" : ""}>Awaiting</option>
+                           <option value="authorized" ${
+                              paymentStatus === "authorized" ? "selected" : ""
+                           }>Pending</option>
+                           <option value="captured" ${
+                              paymentStatus === "captured" ? "selected" : ""
+                           }>Paid</option>
+                        </select>
+                     </label>
+                  </div>
+                  <div class="form-grid">
+                     <label>
+                        Reference / Notes
+                        <input type="text" name="paymentReference" value="${paymentReference}" placeholder="Reference or memo" />
+                     </label>
+                     <label>
+                        Transaction ID
+                        <input type="text" name="paymentTransactionId" value="${paymentTransactionId}" placeholder="e.g. BK12345" />
+                     </label>
+                  </div>
+                  <div class="form-grid">
+                     <label>
+                        bKash Number
+                        <input type="text" name="paymentBkashNumber" value="${paymentBkashNumber}" placeholder="01XXXXXXXXX" />
+                     </label>
+                     <label>
+                        Card Holder
+                        <input type="text" name="paymentCardHolder" value="${paymentCardHolder}" placeholder="Card holder name" />
+                     </label>
+                     <label>
+                        Card Last 4
+                        <input type="text" name="paymentCardLast4" value="${paymentCardLast4}" maxlength="4" placeholder="1234" />
+                     </label>
+                  </div>
+               </fieldset>
+            </div>
+            <footer class="modal-footer">
+               <p class="form-message" role="alert"></p>
+               <div class="modal-actions">
+                  <button type="button" class="btn btn-ghost modal-cancel">Close</button>
+                  <button type="submit" class="btn btn-primary">Save changes</button>
+               </div>
+            </footer>
+         </form>
+      `;
+
+      const form = container.querySelector(".admin-booking-edit-form");
+      const cancelBtn = container.querySelector(".modal-cancel");
+      const messageEl = container.querySelector(".form-message");
+      const submitBtn = form?.querySelector('button[type="submit"]');
+
+      function setFormMessage(text, type = "error") {
+         if (!messageEl) return;
+         messageEl.textContent = text || "";
+         messageEl.classList.toggle("error", Boolean(text) && type === "error");
+         messageEl.classList.toggle("success", Boolean(text) && type === "success");
+      }
+
+      cancelBtn?.addEventListener("click", closeModal);
+
+      form?.addEventListener("submit", async (event) => {
+         event.preventDefault();
+         setFormMessage("");
+         if (!form) return;
+
+         const data = new FormData(form);
+         const payload = {};
+
+         const showtime = data.get("showtime");
+         if (showtime !== null) {
+            const trimmed = String(showtime).trim();
+            if (trimmed) payload.showtime = trimmed;
+         }
+
+         const totalPriceRaw = data.get("totalPrice");
+         if (totalPriceRaw !== null && totalPriceRaw !== "") {
+            const priceNumber = Number(totalPriceRaw);
+            if (!Number.isFinite(priceNumber) || priceNumber < 0) {
+               setFormMessage("Enter a valid total price.");
+               return;
+            }
+            payload.totalPrice = priceNumber;
+         }
+
+         const statusVal = data.get("status");
+         if (statusVal === "confirmed" || statusVal === "cancelled") {
+            payload.status = statusVal;
+         }
+
+         const payment = {
+            method: data.get("paymentMethod"),
+            status: data.get("paymentStatus"),
+            reference: data.get("paymentReference"),
+            transactionId: data.get("paymentTransactionId"),
+            bkashNumber: data.get("paymentBkashNumber"),
+            cardHolder: data.get("paymentCardHolder"),
+            cardLast4: data.get("paymentCardLast4"),
+         };
+
+         Object.keys(payment).forEach((key) => {
+            const value = payment[key];
+            if (typeof value === "string") {
+               const trimmed = value.trim();
+               if (trimmed) {
+                  payment[key] = trimmed;
+               } else {
+                  delete payment[key];
+               }
+            } else if (!value) {
+               delete payment[key];
+            }
+         });
+
+         if (payment.method && !["card", "bkash"].includes(payment.method)) {
+            setFormMessage("Select a valid payment method.");
+            return;
+         }
+
+         if (payment.status && !["pending", "authorized", "captured"].includes(payment.status)) {
+            setFormMessage("Select a valid payment status.");
+            return;
+         }
+
+         if (Object.keys(payment).length) {
+            payload.payment = payment;
+         }
+
+         if (!Object.keys(payload).length) {
+            setFormMessage("No changes to save.");
+            return;
+         }
+
+         try {
+            if (submitBtn) {
+               submitBtn.disabled = true;
+               submitBtn.textContent = "Saving...";
+            }
+            await safeFetch(`/admin/bookings/${bookingId}`, {
+               method: "PATCH",
+               body: payload,
+            });
+            showToast("Booking updated successfully.", "success");
+            await loadAdminResources();
+            if (state.view === "bookings") {
+               await loadUserBookings();
+               renderBookings();
+            }
+            setFormMessage("Booking updated successfully.", "success");
+            setTimeout(() => closeModal(), 300);
+         } catch (error) {
+            console.error("Failed to update booking", error);
+            setFormMessage(error.message || "Failed to update booking.");
+         } finally {
+            if (submitBtn) {
+               submitBtn.disabled = false;
+               submitBtn.textContent = "Save changes";
+            }
+         }
+      });
+
+      openModal(container);
    }
 
    function renderAdminUsersTable() {
@@ -3098,6 +3429,16 @@
       } catch {
          return "";
       }
+   }
+
+   function escapeHtml(value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#39;");
    }
 
    function splitAndTrim(value) {

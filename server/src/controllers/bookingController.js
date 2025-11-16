@@ -61,6 +61,23 @@ const paymentSchema = Joi.object({
    })
    .prefs({ abortEarly: false });
 
+   const adminBookingUpdateSchema = Joi.object({
+      showtime: Joi.string().trim().allow(null, ""),
+      totalPrice: Joi.number().min(0),
+      status: Joi.string().valid("confirmed", "cancelled"),
+      payment: Joi.object({
+         method: Joi.string().valid("card", "bkash"),
+         status: Joi.string().valid("pending", "authorized", "captured"),
+         reference: Joi.string().allow(null, ""),
+         cardHolder: Joi.string().allow(null, ""),
+         cardLast4: Joi.string().allow(null, ""),
+         bkashNumber: Joi.string().allow(null, ""),
+         transactionId: Joi.string().allow(null, ""),
+      }).min(1),
+   })
+      .min(1)
+      .prefs({ abortEarly: false, stripUnknown: true });
+
 export const createBooking = asyncHandler(async (req, res, next) => {
    if (!req.user?.id) {
       return next(createError(401, "Authentication required to book seats."));
@@ -197,7 +214,7 @@ export const updateBookingPayment = asyncHandler(async (req, res, next) => {
       const last4 = normalizedNumber.slice(-4);
       paymentInfo = {
          method: "card",
-         status: "captured",
+         status: "authorized",
          reference: `CARD-${last4}`,
          cardLast4: last4,
          cardHolder: paymentValue.cardHolder?.trim() || undefined,
@@ -205,7 +222,7 @@ export const updateBookingPayment = asyncHandler(async (req, res, next) => {
    } else {
       paymentInfo = {
          method: "bkash",
-         status: "captured",
+         status: "authorized",
          reference: paymentValue.bkashTransactionId?.trim(),
          bkashNumber: paymentValue.bkashNumber?.trim() || undefined,
          transactionId: paymentValue.bkashTransactionId?.trim(),
@@ -261,4 +278,107 @@ export const adminDeleteBooking = asyncHandler(async (req, res, next) => {
    }
    await booking.deleteOne();
    res.status(204).send();
+});
+
+export const adminMarkBookingPaid = asyncHandler(async (req, res, next) => {
+   const booking = await Booking.findById(req.params.bookingId);
+   if (!booking) {
+      return next(createError(404, "Booking not found."));
+   }
+
+   const reference = req.body?.reference?.trim();
+   const transactionId = req.body?.transactionId?.trim();
+   const bkashNumber = req.body?.bkashNumber?.trim();
+
+   const paymentSource = booking.payment;
+   const payment =
+      paymentSource && typeof paymentSource.toObject === "function"
+         ? paymentSource.toObject()
+         : { ...(paymentSource || {}) };
+   payment.status = "captured";
+   if (typeof payment.method !== "string") {
+      payment.method = "bkash";
+   }
+   if (reference) payment.reference = reference;
+   if (transactionId) payment.transactionId = transactionId;
+   if (bkashNumber) payment.bkashNumber = bkashNumber;
+
+   booking.payment = payment;
+   booking.status = "confirmed";
+   await booking.save();
+   res.json(booking);
+});
+
+export const adminCancelBooking = asyncHandler(async (req, res, next) => {
+   const booking = await Booking.findById(req.params.bookingId);
+   if (!booking) {
+      return next(createError(404, "Booking not found."));
+   }
+
+   booking.status = "cancelled";
+   if (booking.payment) {
+      if (typeof booking.payment.status === "string") {
+         booking.payment.status = "pending";
+      } else {
+         booking.payment = {
+            ...(typeof booking.payment.toObject === "function"
+               ? booking.payment.toObject()
+               : booking.payment),
+            status: "pending",
+         };
+      }
+   }
+   await booking.save();
+   res.json(booking);
+});
+
+export const adminUpdateBooking = asyncHandler(async (req, res, next) => {
+   const bookingId = req.params.bookingId;
+   if (!bookingId) {
+      return next(createError(400, "bookingId is required."));
+   }
+
+   const { error, value } = adminBookingUpdateSchema.validate(req.body || {});
+   if (error) {
+      return next(
+         createError(422, "Booking update invalid.", {
+            details: error.details,
+         })
+      );
+   }
+
+   const booking = await Booking.findById(bookingId);
+   if (!booking) {
+      return next(createError(404, "Booking not found."));
+   }
+
+   if (Object.prototype.hasOwnProperty.call(value, "showtime")) {
+      const showtime = value.showtime;
+      if (showtime) {
+         booking.showtime = showtime;
+      }
+   }
+
+   if (Object.prototype.hasOwnProperty.call(value, "totalPrice") && value.totalPrice !== undefined) {
+      booking.totalPrice = value.totalPrice;
+   }
+
+   if (value.status) {
+      booking.status = value.status;
+   }
+
+   if (value.payment) {
+      const paymentSource = booking.payment;
+      const currentPayment =
+         paymentSource && typeof paymentSource.toObject === "function"
+            ? paymentSource.toObject()
+            : { ...(paymentSource || {}) };
+      booking.payment = {
+         ...currentPayment,
+         ...value.payment,
+      };
+   }
+
+   await booking.save();
+   res.json(booking);
 });
