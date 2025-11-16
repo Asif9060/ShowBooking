@@ -113,18 +113,8 @@ router.post(
    requireAdmin,
    adminMarkBookingPaid
 );
-router.post(
-   "/bookings/:bookingId/cancel",
-   requireAuth,
-   requireAdmin,
-   adminCancelBooking
-);
-router.patch(
-   "/bookings/:bookingId",
-   requireAuth,
-   requireAdmin,
-   adminUpdateBooking
-);
+router.post("/bookings/:bookingId/cancel", requireAuth, requireAdmin, adminCancelBooking);
+router.patch("/bookings/:bookingId", requireAuth, requireAdmin, adminUpdateBooking);
 router.delete("/bookings/:bookingId", requireAuth, requireAdmin, adminDeleteBooking);
 
 export default router;

@@ -61,22 +61,22 @@ const paymentSchema = Joi.object({
    })
    .prefs({ abortEarly: false });
 
-   const adminBookingUpdateSchema = Joi.object({
-      showtime: Joi.string().trim().allow(null, ""),
-      totalPrice: Joi.number().min(0),
-      status: Joi.string().valid("confirmed", "cancelled"),
-      payment: Joi.object({
-         method: Joi.string().valid("card", "bkash"),
-         status: Joi.string().valid("pending", "authorized", "captured"),
-         reference: Joi.string().allow(null, ""),
-         cardHolder: Joi.string().allow(null, ""),
-         cardLast4: Joi.string().allow(null, ""),
-         bkashNumber: Joi.string().allow(null, ""),
-         transactionId: Joi.string().allow(null, ""),
-      }).min(1),
-   })
-      .min(1)
-      .prefs({ abortEarly: false, stripUnknown: true });
+const adminBookingUpdateSchema = Joi.object({
+   showtime: Joi.string().trim().allow(null, ""),
+   totalPrice: Joi.number().min(0),
+   status: Joi.string().valid("confirmed", "cancelled"),
+   payment: Joi.object({
+      method: Joi.string().valid("card", "bkash"),
+      status: Joi.string().valid("pending", "authorized", "captured"),
+      reference: Joi.string().allow(null, ""),
+      cardHolder: Joi.string().allow(null, ""),
+      cardLast4: Joi.string().allow(null, ""),
+      bkashNumber: Joi.string().allow(null, ""),
+      transactionId: Joi.string().allow(null, ""),
+   }).min(1),
+})
+   .min(1)
+   .prefs({ abortEarly: false, stripUnknown: true });
 
 export const createBooking = asyncHandler(async (req, res, next) => {
    if (!req.user?.id) {
@@ -359,7 +359,10 @@ export const adminUpdateBooking = asyncHandler(async (req, res, next) => {
       }
    }
 
-   if (Object.prototype.hasOwnProperty.call(value, "totalPrice") && value.totalPrice !== undefined) {
+   if (
+      Object.prototype.hasOwnProperty.call(value, "totalPrice") &&
+      value.totalPrice !== undefined
+   ) {
       booking.totalPrice = value.totalPrice;
    }
 

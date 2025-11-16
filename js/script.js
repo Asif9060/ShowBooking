@@ -1717,10 +1717,74 @@
    function populateTicketCard(fragment, booking) {
       const card = fragment.querySelector ? fragment.querySelector(".ticket-card") : null;
       const root = card || fragment;
+
+      if (!root.querySelector(".ticket-body")) {
+         root.classList.add("ticket-card");
+         root.innerHTML = `
+            <div class="ticket-visual">
+               <div class="ticket-thumb" aria-hidden="true"></div>
+               <div class="ticket-paid-stamp" aria-hidden="true">PAID</div>
+            </div>
+            <div class="ticket-body">
+               <header class="ticket-header">
+                  <div class="ticket-heading">
+                     <span class="ticket-brand">Movie &amp; Show Booking</span>
+                     <h4 class="ticket-title"></h4>
+                  </div>
+                  <span class="ticket-status-chip chip-awaiting" data-status="pending">Awaiting Payment</span>
+               </header>
+               <div class="ticket-details-grid">
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Attendee</span>
+                     <span class="ticket-detail-value ticket-attendee"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Showtime</span>
+                     <span class="ticket-detail-value ticket-showtime"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Seats</span>
+                     <span class="ticket-detail-value ticket-seats"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Total</span>
+                     <span class="ticket-detail-value ticket-total"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Booking ID</span>
+                     <span class="ticket-detail-value ticket-code"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Booked On</span>
+                     <span class="ticket-detail-value ticket-booked-date"></span>
+                  </div>
+               </div>
+               <footer class="ticket-footer">
+                  <div class="ticket-disclaimer">
+                     Keep this ticket handy for entry. ID verification may be required.
+                  </div>
+                  <div class="ticket-actions">
+                     <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
+                        Cancel
+                     </button>
+                  </div>
+               </footer>
+            </div>
+         `;
+      }
+
       const title = root.querySelector(".ticket-title");
-      const meta = root.querySelector(".ticket-meta");
+      const attendeeEl = root.querySelector(".ticket-attendee");
+      const showtimeEl = root.querySelector(".ticket-showtime");
+      const seatsEl = root.querySelector(".ticket-seats");
+      const totalEl = root.querySelector(".ticket-total");
+      const codeEl = root.querySelector(".ticket-code");
+      const bookedDateEl = root.querySelector(".ticket-booked-date");
       const thumb = root.querySelector(".ticket-thumb");
       const cancelBtn = root.querySelector(".cancel-ticket");
+      const statusChip = root.querySelector(".ticket-status-chip");
+      const paidStamp = root.querySelector(".ticket-paid-stamp");
+      const actionsContainer = root.querySelector(".ticket-actions") || root;
 
       const seats = Array.isArray(booking.seats)
          ? booking.seats
@@ -1728,7 +1792,6 @@
          ? [booking.seat]
          : [];
 
-      // Extract seat codes - handle both object format {seat: "A1"} and string format "A1"
       const seatCodes = seats.map((s) => {
          if (typeof s === "string") return s;
          if (s && typeof s === "object" && s.seat) return s.seat;
@@ -1739,6 +1802,31 @@
          typeof booking.totalPrice === "number" ? booking.totalPrice : booking.price;
       const showtime = booking.showtime || "";
       const createdAt = booking.createdAt || booking.created_at || booking.updatedAt;
+      const bookingStatusRaw = (booking.status || "confirmed").toLowerCase();
+      const paymentStatusRaw = (booking?.payment?.status || "pending").toLowerCase();
+
+      const attendeeName =
+         booking.attendeeName ||
+         booking.customerName ||
+         (booking.user && (booking.user.displayName || booking.user.email)) ||
+         state.user?.displayName ||
+         state.user?.email ||
+         "Guest";
+
+      const bookingIdentifier =
+         booking.ticketCode ||
+         booking.confirmationCode ||
+         booking.bookingCode ||
+         booking.reference ||
+         booking.bookingNumber ||
+         booking.id ||
+         booking._id;
+      const ticketCodeValue = bookingIdentifier
+         ? `#${String(bookingIdentifier).slice(-8).toUpperCase()}`
+         : "—";
+      const seatsDisplay = seatCodes.length ? seatCodes.join(", ") : "—";
+      const totalDisplay = typeof price === "number" ? formatCurrency(price) : "";
+      const bookedDisplay = createdAt ? formatDateTime(createdAt) : "";
 
       if (thumb) {
          if (booking.posterUrl) {
@@ -1749,43 +1837,85 @@
          }
       }
 
-      if (title) title.textContent = booking.movieTitle || booking.title || "Untitled";
+      if (title) {
+         title.textContent = booking.movieTitle || booking.title || "Untitled";
+      }
+      if (attendeeEl) attendeeEl.textContent = attendeeName;
+      if (showtimeEl) showtimeEl.textContent = showtime || "—";
+      if (seatsEl) seatsEl.textContent = seatsDisplay;
+      if (totalEl) totalEl.textContent = totalDisplay || "—";
+      if (codeEl) codeEl.textContent = ticketCodeValue;
+      if (bookedDateEl) bookedDateEl.textContent = bookedDisplay || "—";
 
-      if (meta) {
-         const pieces = [];
-         if (showtime) pieces.push(`Showtime: ${showtime}`);
-         if (seatCodes.length) pieces.push(`Seats: ${seatCodes.join(", ")}`);
-         if (price) pieces.push(`Total: ${formatCurrency(price)}`);
-         if (createdAt) pieces.push(`Booked: ${formatDateTime(createdAt)}`);
-         meta.textContent = pieces.join(" • ");
+      root.classList.remove("ticket-paid", "ticket-pending", "ticket-awaiting", "ticket-cancelled");
+      let cardStatusClass = "ticket-awaiting";
+      let statusClass = "chip-awaiting";
+      let statusLabel = "Awaiting Payment";
+      let statusData = paymentStatusRaw;
+
+      if (bookingStatusRaw === "cancelled") {
+         cardStatusClass = "ticket-cancelled";
+         statusClass = "chip-cancelled";
+         statusLabel = "Cancelled";
+         statusData = "cancelled";
+      } else if (paymentStatusRaw === "captured") {
+         cardStatusClass = "ticket-paid";
+         statusClass = "chip-paid";
+         statusLabel = "Paid";
+      } else if (paymentStatusRaw === "authorized") {
+         cardStatusClass = "ticket-pending";
+         statusClass = "chip-pending";
+         statusLabel = "Pending Verification";
+      }
+
+      root.classList.add(cardStatusClass);
+
+      if (statusChip) {
+         statusChip.textContent = statusLabel;
+         statusChip.className = `ticket-status-chip ${statusClass}`;
+         statusChip.dataset.status = statusData;
+      }
+
+      if (paidStamp) {
+         paidStamp.style.visibility = cardStatusClass === "ticket-paid" ? "visible" : "hidden";
+         paidStamp.style.opacity = cardStatusClass === "ticket-paid" ? "" : "0";
       }
 
       if (cancelBtn) {
+         cancelBtn.disabled = bookingStatusRaw === "cancelled";
+         cancelBtn.textContent = bookingStatusRaw === "cancelled" ? "Cancelled" : "Cancel";
          cancelBtn.addEventListener("click", () => cancelBooking(booking));
       }
 
-      // Add Pay Now button
-      try {
-         const actionsContainer = root.querySelector(".ticket-actions") || root;
-         const payBtn = document.createElement("button");
-         payBtn.type = "button";
-         payBtn.className = "btn btn-secondary pay-now";
-         const paymentStatus = (booking?.payment?.status || "pending").toLowerCase();
-         if (paymentStatus === "captured") {
-            payBtn.textContent = "Paid";
-            payBtn.disabled = true;
-            payBtn.classList.add("paid");
-         } else if (paymentStatus === "authorized") {
-            payBtn.textContent = "Pending";
-            payBtn.disabled = true;
-            payBtn.classList.add("pending");
-         } else {
-            payBtn.textContent = "Pay Now";
-            payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
+      if (actionsContainer) {
+         const existingPayBtn = actionsContainer.querySelector(".pay-now");
+         if (existingPayBtn) existingPayBtn.remove();
+
+         if (bookingStatusRaw !== "cancelled") {
+            const payBtn = document.createElement("button");
+            payBtn.type = "button";
+            payBtn.className = "btn btn-secondary pay-now";
+
+            if (paymentStatusRaw === "captured") {
+               payBtn.textContent = "Paid";
+               payBtn.disabled = true;
+               payBtn.classList.add("paid");
+            } else if (paymentStatusRaw === "authorized") {
+               payBtn.textContent = "Pending";
+               payBtn.disabled = true;
+               payBtn.classList.add("pending");
+            } else {
+               payBtn.textContent = "Pay Now";
+               payBtn.addEventListener("click", () => openBookingPaymentModal(booking));
+            }
+
+            const cancelAction = actionsContainer.querySelector(".cancel-ticket");
+            if (cancelAction) {
+               actionsContainer.insertBefore(payBtn, cancelAction);
+            } else {
+               actionsContainer.appendChild(payBtn);
+            }
          }
-         actionsContainer.appendChild(payBtn);
-      } catch (err) {
-         // ignore UI attach errors
       }
    }
 
@@ -2091,15 +2221,16 @@
    async function loadAdminResources() {
       if (!state.isAdmin) return;
       try {
-         const [movies, upcoming, carousel, media, bookings, users, config] = await Promise.all([
-            safeFetch("/admin/movies").catch(() => state.movies),
-            safeFetch("/admin/upcoming").catch(() => state.upcoming),
-            safeFetch("/admin/carousel").catch(() => state.carousel),
-            safeFetch("/admin/media").catch(() => []),
-            safeFetch("/admin/bookings").catch(() => []),
-            safeFetch("/admin/users").catch(() => []),
-            safeFetch("/admin/config").catch(() => state.config),
-         ]);
+         const [movies, upcoming, carousel, media, bookings, users, config] =
+            await Promise.all([
+               safeFetch("/admin/movies").catch(() => state.movies),
+               safeFetch("/admin/upcoming").catch(() => state.upcoming),
+               safeFetch("/admin/carousel").catch(() => state.carousel),
+               safeFetch("/admin/media").catch(() => []),
+               safeFetch("/admin/bookings").catch(() => []),
+               safeFetch("/admin/users").catch(() => []),
+               safeFetch("/admin/config").catch(() => state.config),
+            ]);
 
          state.admin.movies = Array.isArray(movies) ? movies : [];
          state.admin.upcoming = Array.isArray(upcoming) ? upcoming : [];
@@ -2785,20 +2916,20 @@
       }
       bookings.forEach((booking) => {
          const row = document.createElement("tr");
-             const bookingId = booking._id || booking.id;
-             const userEmail = escapeHtml(booking.user?.email || "Unknown User");
-             const movieTitle = escapeHtml(booking.movie?.title || booking.movieTitle || "—");
+         const bookingId = booking._id || booking.id;
+         const userEmail = escapeHtml(booking.user?.email || "Unknown User");
+         const movieTitle = escapeHtml(booking.movie?.title || booking.movieTitle || "—");
          const seats =
             booking.seatCodes?.join(", ") ||
             (Array.isArray(booking.seats)
                ? booking.seats
                     .map((s) => (typeof s === "string" ? s : s?.seat))
                     .filter(Boolean)
-                  .join(", ")
+                    .join(", ")
                : "—");
-             const seatsDisplay = escapeHtml(seats || "—");
-            const totalPrice = escapeHtml(formatCurrency(booking.totalPrice || 0) || "");
-             const paymentMethod = escapeHtml(booking.payment?.method || "—");
+         const seatsDisplay = escapeHtml(seats || "—");
+         const totalPrice = escapeHtml(formatCurrency(booking.totalPrice || 0) || "");
+         const paymentMethod = escapeHtml(booking.payment?.method || "—");
          const paymentStatusRaw = (booking.payment?.status || "pending").toLowerCase();
          const bookingStatusRaw = (booking.status || "confirmed").toLowerCase();
          const bookedDate = escapeHtml(formatDateTime(booking.createdAt) || "—");
@@ -2816,7 +2947,9 @@
                ? "badge badge-warning"
                : "badge";
          const bookingBadgeClass =
-            bookingStatusRaw === "cancelled" ? "badge badge-danger" : "badge badge-success";
+            bookingStatusRaw === "cancelled"
+               ? "badge badge-danger"
+               : "badge badge-success";
          const bookingStatusLabel =
             bookingStatusRaw === "cancelled" ? "Cancelled" : "Confirmed";
          const paymentStatusDisplay = escapeHtml(paymentStatusLabel);
@@ -2965,7 +3098,9 @@
       container.innerHTML = `
          <header class="modal-header">
             <h2>Edit booking</h2>
-            <p class="muted">${escapeHtml(booking.movieTitle || booking.movie?.title || "Booking")}</p>
+            <p class="muted">${escapeHtml(
+               booking.movieTitle || booking.movie?.title || "Booking"
+            )}</p>
          </header>
          <form class="admin-form admin-booking-edit-form">
             <div class="modal-body">
@@ -2981,8 +3116,12 @@
                   <label>
                      Booking Status
                      <select name="status">
-                        <option value="confirmed" ${statusValue === "confirmed" ? "selected" : ""}>Confirmed</option>
-                        <option value="cancelled" ${statusValue === "cancelled" ? "selected" : ""}>Cancelled</option>
+                        <option value="confirmed" ${
+                           statusValue === "confirmed" ? "selected" : ""
+                        }>Confirmed</option>
+                        <option value="cancelled" ${
+                           statusValue === "cancelled" ? "selected" : ""
+                        }>Cancelled</option>
                      </select>
                   </label>
                </div>
@@ -2992,14 +3131,20 @@
                      <label>
                         Method
                         <select name="paymentMethod">
-                           <option value="card" ${paymentMethod === "card" ? "selected" : ""}>Card</option>
-                           <option value="bkash" ${paymentMethod === "bkash" ? "selected" : ""}>bKash</option>
+                           <option value="card" ${
+                              paymentMethod === "card" ? "selected" : ""
+                           }>Card</option>
+                           <option value="bkash" ${
+                              paymentMethod === "bkash" ? "selected" : ""
+                           }>bKash</option>
                         </select>
                      </label>
                      <label>
                         Status
                         <select name="paymentStatus">
-                           <option value="pending" ${paymentStatus === "pending" ? "selected" : ""}>Awaiting</option>
+                           <option value="pending" ${
+                              paymentStatus === "pending" ? "selected" : ""
+                           }>Awaiting</option>
                            <option value="authorized" ${
                               paymentStatus === "authorized" ? "selected" : ""
                            }>Pending</option>
@@ -3117,7 +3262,10 @@
             return;
          }
 
-         if (payment.status && !["pending", "authorized", "captured"].includes(payment.status)) {
+         if (
+            payment.status &&
+            !["pending", "authorized", "captured"].includes(payment.status)
+         ) {
             setFormMessage("Select a valid payment status.");
             return;
          }

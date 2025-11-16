@@ -483,7 +483,8 @@
                         <header class="admin-panel-header">
                            <h3>Manage Bookings</h3>
                            <p>
-                              View and manage all user bookings across all movies and showtimes.
+                              View and manage all user bookings across all movies and
+                              showtimes.
                            </p>
                         </header>
                         <div class="admin-table-wrap">
@@ -717,18 +718,59 @@
       </template>
 
       <template id="ticketTemplate">
-         <div class="ticket-card">
-            <div class="ticket-thumb"></div>
-            <div class="ticket-info">
-               <h4 class="ticket-title"></h4>
-               <div class="ticket-meta"></div>
-               <div class="ticket-actions">
-                  <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
-                     Cancel
-                  </button>
-               </div>
+         <article class="ticket-card">
+            <div class="ticket-visual">
+               <div class="ticket-thumb" aria-hidden="true"></div>
+               <div class="ticket-paid-stamp" aria-hidden="true">PAID</div>
             </div>
-         </div>
+            <div class="ticket-body">
+               <header class="ticket-header">
+                  <div class="ticket-heading">
+                     <span class="ticket-brand">Movie &amp; Show Booking</span>
+                     <h4 class="ticket-title"></h4>
+                  </div>
+                  <span class="ticket-status-chip chip-awaiting" data-status="pending">
+                     Awaiting Payment
+                  </span>
+               </header>
+               <div class="ticket-details-grid">
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Attendee</span>
+                     <span class="ticket-detail-value ticket-attendee"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Showtime</span>
+                     <span class="ticket-detail-value ticket-showtime"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Seats</span>
+                     <span class="ticket-detail-value ticket-seats"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Total</span>
+                     <span class="ticket-detail-value ticket-total"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Booking ID</span>
+                     <span class="ticket-detail-value ticket-code"></span>
+                  </div>
+                  <div class="ticket-detail">
+                     <span class="ticket-detail-label">Booked On</span>
+                     <span class="ticket-detail-value ticket-booked-date"></span>
+                  </div>
+               </div>
+               <footer class="ticket-footer">
+                  <div class="ticket-disclaimer">
+                     Keep this ticket handy for entry. ID verification may be required.
+                  </div>
+                  <div class="ticket-actions">
+                     <button class="btn btn-ghost btn-sm btn-danger cancel-ticket">
+                        Cancel
+                     </button>
+                  </div>
+               </footer>
+            </div>
+         </article>
       </template>
 
       <footer class="site-footer">
